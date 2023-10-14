@@ -1,6 +1,54 @@
 type Query {
     pets: [Pet]
+    getMyInfo: [User]
 }
+
+type User {
+    UUID: String!
+    username: String
+    email: String
+    registrationDate: Int
+    avatarUrl: String
+}
+
+type Mutation {
+    loginUser(input: LoginUserInput!) : LoginUserPayload
+    verifyOtp(input: VerifyOtpInput!) : VerifyOtpPayload
+    registrationUser(input: RegistrationUserInput!) : RegistrationUserPayload
+}
+
+type RegistrationUserPayload {
+    UUID: String,
+    credentials: VerifyOtpPayload
+}
+
+input RegistrationUserInput {
+    usernameOrEmail: String!
+    password: String!
+}
+
+type VerifyOtpPayload {
+    type: String
+    accessToken: String
+    signedDate: Int
+    expiredDate: Int
+}
+
+input VerifyOtpInput {
+    userOrEmail: String
+    otp: String!
+}
+
+type LoginUserPayload {
+    sentTo: String!
+    otp: String
+}
+
+input LoginUserInput {
+    userOrEmail: String!
+    password: String!
+}
+
 type Pet {
     name: String
     color: String
