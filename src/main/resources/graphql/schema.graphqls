@@ -1,5 +1,4 @@
 type Query {
-    pets: [Pet]
     getMyInfo: User
     getUser(username: String!) : User
     getMyPosts: [Post] #Todo implement Relays
@@ -116,11 +115,6 @@ type LoginUserPayload {
 input LoginUserInput {
     userOrEmail: String!
     password: String!
-}
-
-type Pet {
-    name: String
-    color: String
 }
 
 enum Status {
