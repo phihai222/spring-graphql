@@ -2,7 +2,14 @@ type Query {
     pets: [Pet]
     getMyInfo: User
     getUser(username: String!) : User
-    getMyPost: [Post]
+    getMyPosts: [Post] #Todo implement Relays
+    getCommentByPostId(postId: ID!): [Comment] #Todo implement Relays
+}
+
+type Comment {
+    id: ID!,
+    userId: ID,
+    content: String
 }
 
 type User {
@@ -20,6 +27,7 @@ type Post {
     fullUserName: String
     content: String
     photoUrl: [String]
+    comments: [Comment]
 }
 
 type Mutation {
@@ -27,6 +35,45 @@ type Mutation {
     verifyOtp(input: VerifyOtpInput!) : VerifyOtpPayload
     registrationUser(input: RegistrationUserInput!) : RegistrationUserPayload
     createPost(input: CreatePostInput!) : CreatePostPayload
+    likePost(input: LikePostInput!) : LikePostPayload
+    commentPost(input: CommentPostInput!) : CommentPostPayload
+    addFriend(input: addFriendInput!) : addFriendPayload
+    acceptOrRejectFriend(input: acceptOrRejectFriendInput!): acceptOrRejectFriendPayload
+}
+
+type acceptOrRejectFriendPayload {
+    status: Status,
+}
+
+input acceptOrRejectFriendInput {
+    id: ID!,
+    status: Boolean
+}
+
+type addFriendPayload {
+    id: ID!
+}
+
+input addFriendInput {
+    userId: ID!,
+    message: String
+}
+
+type CommentPostPayload {
+    id: ID!
+}
+
+input CommentPostInput {
+    postId: ID!,
+    content: String!
+}
+
+type LikePostPayload {
+    id: ID!
+}
+
+input LikePostInput {
+    postId: ID!
 }
 
 type CreatePostPayload {
@@ -74,4 +121,8 @@ input LoginUserInput {
 type Pet {
     name: String
     color: String
+}
+
+enum Status {
+    COMPLETED
 }
