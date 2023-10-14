@@ -1,24 +1,46 @@
 type Query {
     pets: [Pet]
-    getMyInfo: [User]
+    getMyInfo: User
+    getUser(username: String!) : User
+    getMyPost: [Post]
 }
 
 type User {
-    UUID: String!
+    UUID: ID!
     username: String
+    firstName: String
+    lastName: String
     email: String
     registrationDate: Int
     avatarUrl: String
+}
+
+type Post {
+    UUID: ID!
+    fullUserName: String
+    content: String
+    photoUrl: [String]
 }
 
 type Mutation {
     loginUser(input: LoginUserInput!) : LoginUserPayload
     verifyOtp(input: VerifyOtpInput!) : VerifyOtpPayload
     registrationUser(input: RegistrationUserInput!) : RegistrationUserPayload
+    createPost(input: CreatePostInput!) : CreatePostPayload
+}
+
+type CreatePostPayload {
+    id: ID!,
+    post: Post
+}
+
+input CreatePostInput {
+    content: String,
+    photoUrls: [String]
 }
 
 type RegistrationUserPayload {
-    UUID: String,
+    UUID: ID!,
     credentials: VerifyOtpPayload
 }
 
