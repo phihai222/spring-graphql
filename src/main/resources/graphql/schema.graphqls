@@ -11,7 +11,7 @@ type Mutation {
     registrationUser(input: RegistrationUserInput!) : RegistrationUserPayload
     createPost(input: CreatePostInput!) : CreatePostPayload
     likePost(input: LikePostInput!) : LikePostPayload
-    commentPost(input: CommentPostInput!) : CommentPostPayload
+    commentPost(input: CommentPostInput!) : Comment
     addFriend(input: addFriendInput!) : addFriendPayload
     acceptOrRejectFriend(input: acceptOrRejectFriendInput!): acceptOrRejectFriendPayload
 }
@@ -19,8 +19,9 @@ type Mutation {
 #Model
 type Comment {
     id: ID!,
-    userId: ID,
-    content: String
+    userId: ID!,
+    content: String!,
+    postId: String!
 }
 
 type User {
@@ -64,10 +65,6 @@ input addFriendInput {
     message: String
 }
 
-#Comment
-type CommentPostPayload {
-    id: ID!
-}
 
 input CommentPostInput {
     postId: ID!,
