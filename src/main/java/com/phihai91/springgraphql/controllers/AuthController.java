@@ -15,7 +15,7 @@ public class AuthController {
     @MutationMapping
     AuthModel.RegistrationUserPayload registrationUser(@Argument AuthModel.RegistrationUserInput input) {
         return AuthModel.RegistrationUserPayload.builder()
-                .UUID(input.usernameOrEmail())
+                .id(input.usernameOrEmail())
                 .build();
     }
 

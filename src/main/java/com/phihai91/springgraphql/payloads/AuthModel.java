@@ -10,7 +10,7 @@ public class AuthModel {
 
     @Builder
     public record RegistrationUserPayload(
-            String UUID,
+            String id,
             VerifyOtpPayload credentials
     ) {
     }
