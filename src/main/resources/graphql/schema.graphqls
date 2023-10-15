@@ -12,8 +12,8 @@ type Mutation {
     createPost(input: CreatePostInput!) : CreatePostPayload
     likePost(input: LikePostInput!) : LikePostPayload
     commentPost(input: CommentPostInput!) : Comment
-    addFriend(input: addFriendInput!) : addFriendPayload
-    acceptOrRejectFriend(input: acceptOrRejectFriendInput!): acceptOrRejectFriendPayload
+    addFriend(input: AddFriendInput!) : AddFriendPayload
+    acceptOrRejectFriend(input: AcceptOrRejectFriendInput!): AcceptOrRejectFriendPayload
 }
 
 #Model
@@ -47,25 +47,28 @@ enum Status {
 }
 
 #Friend
-type acceptOrRejectFriendPayload {
+type AcceptOrRejectFriendPayload {
+    requestId: ID!
     status: Status,
 }
 
-input acceptOrRejectFriendInput {
-    id: ID!,
+input AcceptOrRejectFriendInput {
+    requestId: ID!,
     status: Boolean
 }
 
-type addFriendPayload {
-    id: ID!
+type AddFriendPayload {
+    requestId: ID!,
+    friendId: ID!,
+    message: String
 }
 
-input addFriendInput {
+input AddFriendInput {
     userId: ID!,
     message: String
 }
 
-
+#Comment
 input CommentPostInput {
     postId: ID!,
     content: String!
