@@ -28,12 +28,21 @@ public class AuthModel {
     public record LoginUserInput(
             String userOrEmail,
             String password
-    ) {}
+    ) {
+    }
 
     @Builder
     public record LoginUserPayload(
             String sentTo,
             String otp
-    ){}
+    ) {
+    }
+
+    @Builder
+    public record VerifyOtpInput(
+            String userOrEmail,
+            String otp
+    ) {
+    }
 }
 

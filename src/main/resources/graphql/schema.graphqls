@@ -98,8 +98,8 @@ input RegistrationUserInput {
 type VerifyOtpPayload {
     type: String
     accessToken: String
-    signedDate: Int
-    expiredDate: Int
+    signedDate: Float
+    expiredDate: Float
 }
 
 input VerifyOtpInput {

@@ -7,6 +7,8 @@ import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.SchemaMapping;
 import org.springframework.stereotype.Controller;
 
+import java.util.Date;
+
 @Controller
 @Slf4j
 public class AuthController {
@@ -30,6 +32,16 @@ public class AuthController {
         return AuthModel.LoginUserPayload.builder()
                 .sentTo(input.userOrEmail())
                 .otp("9282833")
+                .build();
+    }
+
+    @MutationMapping
+    AuthModel.VerifyOtpPayload verifyOtp(@Argument AuthModel.VerifyOtpInput input) {
+        return AuthModel.VerifyOtpPayload.builder()
+                .accessToken(input.userOrEmail())
+                .expiredDate(new Date().getTime() + 1000)
+                .signedDate(new Date().getTime())
+                .type("Bearer")
                 .build();
     }
 }
