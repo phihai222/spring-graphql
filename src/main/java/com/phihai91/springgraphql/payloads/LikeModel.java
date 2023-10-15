@@ -1,11 +1,18 @@
 package com.phihai91.springgraphql.payloads;
 
-public class LikeModel {
-    public record LikePostInput(
+import lombok.Builder;
 
+public class LikeModel {
+    @Builder
+    public record LikePostInput(
+            String postId
     ) {
     }
 
-    public record LikePostPayload() {
+    @Builder
+    public record LikePostPayload(
+            String id,
+            Boolean liked
+    ) {
     }
 }
