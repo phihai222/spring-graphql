@@ -12,10 +12,8 @@ import org.springframework.stereotype.Controller;
 public class AuthController {
     @MutationMapping
     AuthModel.RegistrationUserPayload registrationUser(@Argument AuthModel.RegistrationUserInput input) {
-        log.info(input.usernameOrEmail());
-        log.info(input.password());
         return AuthModel.RegistrationUserPayload.builder()
-                .UUID("asdasdasd")
+                .UUID(input.usernameOrEmail())
                 .build();
     }
 
@@ -24,6 +22,14 @@ public class AuthController {
         return AuthModel.VerifyOtpPayload.builder()
                 .accessToken("test token")
                 .type("Bearer")
+                .build();
+    }
+
+    @MutationMapping
+    AuthModel.LoginUserPayload loginUser(@Argument AuthModel.LoginUserInput input) {
+        return AuthModel.LoginUserPayload.builder()
+                .sentTo(input.userOrEmail())
+                .otp("9282833")
                 .build();
     }
 }

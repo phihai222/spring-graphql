@@ -23,5 +23,17 @@ public class AuthModel {
             Long expiredDate
     ) {
     }
+
+    @Builder
+    public record LoginUserInput(
+            String userOrEmail,
+            String password
+    ) {}
+
+    @Builder
+    public record LoginUserPayload(
+            String sentTo,
+            String otp
+    ){}
 }
 
