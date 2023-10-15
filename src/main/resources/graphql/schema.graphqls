@@ -5,6 +5,18 @@ type Query {
     getCommentByPostId(postId: ID!): [Comment] #Todo implement Relays
 }
 
+type Mutation {
+    loginUser(input: LoginUserInput!) : LoginUserPayload
+    verifyOtp(input: VerifyOtpInput!) : VerifyOtpPayload
+    registrationUser(input: RegistrationUserInput!) : RegistrationUserPayload
+    createPost(input: CreatePostInput!) : CreatePostPayload
+    likePost(input: LikePostInput!) : LikePostPayload
+    commentPost(input: CommentPostInput!) : CommentPostPayload
+    addFriend(input: addFriendInput!) : addFriendPayload
+    acceptOrRejectFriend(input: acceptOrRejectFriendInput!): acceptOrRejectFriendPayload
+}
+
+#Model
 type Comment {
     id: ID!,
     userId: ID,
@@ -29,17 +41,11 @@ type Post {
     comments: [Comment]
 }
 
-type Mutation {
-    loginUser(input: LoginUserInput!) : LoginUserPayload
-    verifyOtp(input: VerifyOtpInput!) : VerifyOtpPayload
-    registrationUser(input: RegistrationUserInput!) : RegistrationUserPayload
-    createPost(input: CreatePostInput!) : CreatePostPayload
-    likePost(input: LikePostInput!) : LikePostPayload
-    commentPost(input: CommentPostInput!) : CommentPostPayload
-    addFriend(input: addFriendInput!) : addFriendPayload
-    acceptOrRejectFriend(input: acceptOrRejectFriendInput!): acceptOrRejectFriendPayload
+enum Status {
+    COMPLETED
 }
 
+#Friend
 type acceptOrRejectFriendPayload {
     status: Status,
 }
@@ -58,6 +64,7 @@ input addFriendInput {
     message: String
 }
 
+#Comment
 type CommentPostPayload {
     id: ID!
 }
@@ -67,6 +74,7 @@ input CommentPostInput {
     content: String!
 }
 
+#Like
 type LikePostPayload {
     id: ID!
     liked: Boolean
@@ -76,6 +84,7 @@ input LikePostInput {
     postId: ID!
 }
 
+#Post
 type CreatePostPayload {
     id: ID!,
     post: Post,
@@ -86,6 +95,7 @@ input CreatePostInput {
     photoUrls: [String]
 }
 
+#Auth
 type RegistrationUserPayload {
     id: ID!,
     credentials: VerifyOtpPayload
@@ -118,6 +128,3 @@ input LoginUserInput {
     password: String!
 }
 
-enum Status {
-    COMPLETED
-}
