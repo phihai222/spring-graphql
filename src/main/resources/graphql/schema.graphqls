@@ -102,8 +102,8 @@ type RegistrationUserPayload {
 }
 
 input RegistrationUserInput {
-    usernameOrEmail: String!
-    password: String!
+    usernameOrEmail: String! @Pattern(regexp: "^\\S+@\\S+\\.\\S+$", message: "Must be valid email")
+    password: String! @Pattern(regexp: "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$", message: "Has minimum 8 characters, At least 1 uppercase, 1 lowercase, 1 digit, 1 special character English letter")
 }
 
 type VerifyOtpPayload {
@@ -128,3 +128,8 @@ input LoginUserInput {
     password: String!
 }
 
+directive @Size(min : Int = 0, max : Int = 2147483647, message : String = "graphql.validation.Size.message")
+    on ARGUMENT_DEFINITION | INPUT_FIELD_DEFINITION
+
+directive @Pattern(regexp : String! =".*", message : String = "graphql.validation.Pattern.message")
+    on ARGUMENT_DEFINITION | INPUT_FIELD_DEFINITION
