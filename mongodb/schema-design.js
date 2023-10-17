@@ -14,7 +14,8 @@ const users = {
         id: "UUID",
         createdDate: 23123123213,
         status: "PUBLIC"
-    }]
+    }],
+    friends: ["UUID"]
 }
 
 const posts = {
@@ -40,4 +41,13 @@ const likes = {
     postId: "UUID",
     userId: "UUID",
     createdDate: 1022293
+}
+
+const friendRequest = {
+    id: "UUID",
+    fromUser: "UUID",
+    toUser: "UUID",
+    message: "Hello friend",
+    status: "PENDING",
+    createdDate: 231212312
 }
