@@ -1,0 +1,53 @@
+version: '3.2'
+
+services:
+  social_service:
+    image: gradle:8.2.1-jdk17
+    container_name: social_service
+    depends_on:
+      - mongo
+    ports:
+      - '8080:8080'
+    networks:
+      - social-network
+    environment:
+      - JAVA_TOOL_OPTIONS=${JAVA_TOOL_OPTIONS}
+      - MONGO_HOST=mongo
+      - MONGO_USERNAME=${MONGO_USERNAME}
+      - MONGO_PASSWORD=${MONGO_PASSWORD}
+
+    volumes:
+      - ./:/home/gradle/project
+    working_dir: /home/gradle/project
+    command: /bin/sh -c "./wait-for-it.sh mongo:27017 -s -t 90 -- gradle bootRun"
+
+  mongo:
+    image: mongo:7.0.2
+    container_name: mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    networks:
+      - social-network
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+
+  mongo-express:
+    image: mongo-express
+    container_name: mongo-express
+    restart: always
+    ports:
+      - "8081:8081"
+    networks:
+      - social-network
+    environment:
+      ME_CONFIG_BASICAUTH_USERNAME: root
+      ME_CONFIG_BASICAUTH_PASSWORD: admin
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_USERNAME}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_PASSWORD}
+      ME_CONFIG_MONGODB_URL: mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongo:27017/
+
+networks:
+  social-network:
+    driver: bridge
