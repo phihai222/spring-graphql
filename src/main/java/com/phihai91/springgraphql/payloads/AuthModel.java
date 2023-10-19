@@ -1,11 +1,18 @@
 package com.phihai91.springgraphql.payloads;
 
+import com.phihai91.springgraphql.entities.User;
 import lombok.Builder;
 
 public class AuthModel {
     public record RegistrationUserInput(
             String usernameOrEmail,
             String password) {
+        public User toUser() {
+            return User.builder()
+                    .username(usernameOrEmail)
+                    .password(password)
+                    .build();
+        }
     }
 
     @Builder

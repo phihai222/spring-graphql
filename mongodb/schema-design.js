@@ -10,10 +10,10 @@ const users = {
         lastName: "Nguyen",
         avatarUrl: "http://image.png",
     },
-    postId: [{
+    posts: [{
         id: "UUID",
         createdDate: 23123123213,
-        status: "PUBLIC"
+        visibility: "PUBLIC"
     }],
     friends: ["UUID"]
 }
@@ -21,7 +21,7 @@ const users = {
 const posts = {
     id: "UUID",
     userId: "UUID",
-    status: "PUBLIC",
+    visibility: "PUBLIC",
     content: "Make me wanna die",
     photoUrls: ["http://image1.png"],
     createdDate: 23123123123,

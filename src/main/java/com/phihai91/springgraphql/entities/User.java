@@ -1,5 +1,6 @@
 package com.phihai91.springgraphql.entities;
 
+import com.phihai91.springgraphql.payloads.AuthModel;
 import lombok.Builder;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -19,9 +20,12 @@ public record User(
         @CreatedDate
         LocalDateTime registrationDate,
         UserInfo userInfo,
-        List<String> friends
-//        List<PostEmbebed> postId
-
+        List<String> friends,
+        List<UserPost> posts
 ) {
-
+        public AuthModel.RegistrationUserPayload toGetRegistrationUserPayload(String userId) {
+                return AuthModel.RegistrationUserPayload.builder()
+                        .id(userId)
+                        .build();
+        }
 }
