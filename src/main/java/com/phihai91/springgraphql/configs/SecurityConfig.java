@@ -30,7 +30,6 @@ public class SecurityConfig {
 
     @Bean
     public ReactiveUserDetailsService userDetailsService(IUserRepository users) {
-
         return username -> users.findByUsername(username)
                 .map(u -> User
                         .withUsername(u.username()).password(u.password())

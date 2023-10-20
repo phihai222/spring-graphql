@@ -1,16 +1,12 @@
 package com.phihai91.springgraphql.controllers;
 
 import com.phihai91.springgraphql.payloads.AuthModel;
-import com.phihai91.springgraphql.securities.JwtTokenProvider;
 import com.phihai91.springgraphql.services.IUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.SchemaMapping;
-import org.springframework.http.HttpHeaders;
-import org.springframework.security.authentication.ReactiveAuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Controller;
 import reactor.core.publisher.Mono;
 
@@ -23,40 +19,20 @@ public class AuthController {
     @Autowired
     private IUserService userService;
 
-    @Autowired
-    private JwtTokenProvider jwtTokenProvider;
-
-    @Autowired
-    private ReactiveAuthenticationManager authenticationManager;
-
     @MutationMapping
     Mono<AuthModel.RegistrationUserPayload> registrationUser(@Argument AuthModel.RegistrationUserInput input) {
         return userService.registrationUser(input);
     }
     @SchemaMapping(typeName = "RegistrationUserPayload", field = "credentials")
-    Mono<AuthModel.VerifyOtpPayload> credentials() {
-        AuthModel.RegistrationUserInput registrationUserPayload = AuthModel.RegistrationUserInput
-                .builder()
-                .usernameOrEmail("phihai91")
-                .password("abc")
-                .build();
+    Mono<AuthModel.VerifyOtpPayload> credentials(AuthModel.RegistrationUserPayload registrationUserPayload) {
+        log.info(registrationUserPayload.id());
 
-        Mono<AuthModel.RegistrationUserInput> authRequest = Mono.just(registrationUserPayload);
+        //TODO pass userId to get Token
 
-        return authRequest
-                .flatMap(login -> this.authenticationManager
-                        .authenticate(new UsernamePasswordAuthenticationToken(
-                                login.usernameOrEmail(), login.password()))
-                        .map(jwtTokenProvider::createToken))
-                .map(jwt -> {
-                    HttpHeaders httpHeaders = new HttpHeaders();
-                    httpHeaders.add(HttpHeaders.AUTHORIZATION, "Bearer " + jwt);
-                    return AuthModel.VerifyOtpPayload.builder()
-                            .accessToken(jwt)
-                            .expiredDate(2323232l)
-                            .signedDate(23232323l)
-                            .build();
-                });
+        return userService.getToken(Mono.just(AuthModel.RegistrationUserInput.builder()
+                        .usernameOrEmail("asdasdas")
+                        .password("asSd@232")
+                .build()));
     }
 
     @MutationMapping

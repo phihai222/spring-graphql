@@ -5,4 +5,6 @@ import reactor.core.publisher.Mono;
 
 public interface IUserService {
     Mono<AuthModel.RegistrationUserPayload> registrationUser(AuthModel.RegistrationUserInput input);
+
+    Mono<AuthModel.VerifyOtpPayload> getToken(Mono<AuthModel.RegistrationUserInput> authRequest);
 }
