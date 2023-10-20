@@ -20,11 +20,15 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-webflux'
 	implementation 'org.springframework.boot:spring-boot-starter-data-mongodb-reactive'
 	implementation 'com.graphql-java:graphql-java-extended-validation:19.1'
+	implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.3'
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'io.projectreactor:reactor-test'
 	testImplementation 'org.springframework.graphql:spring-graphql-test'
+	testImplementation 'org.springframework.security:spring-security-test'
 }
 
 tasks.named('test') {

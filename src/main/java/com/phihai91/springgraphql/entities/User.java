@@ -7,6 +7,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Document
@@ -21,8 +22,16 @@ public record User(
         LocalDateTime registrationDate,
         UserInfo userInfo,
         List<String> friends,
-        List<UserPost> posts
+        List<UserPost> posts,
+        Boolean active,
+
+        List<String> roles
 ) {
+        public User {
+                roles = new ArrayList<>();
+                active = true;
+        }
+
         public AuthModel.RegistrationUserPayload toGetRegistrationUserPayload(String userId) {
                 return AuthModel.RegistrationUserPayload.builder()
                         .id(userId)

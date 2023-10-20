@@ -4,6 +4,7 @@ import com.phihai91.springgraphql.entities.User;
 import lombok.Builder;
 
 public class AuthModel {
+    @Builder
     public record RegistrationUserInput(
             String usernameOrEmail,
             String password) {
