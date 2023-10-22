@@ -2,13 +2,13 @@ package com.phihai91.springgraphql.services;
 
 import com.phihai91.springgraphql.entities.Role;
 import com.phihai91.springgraphql.entities.User;
+import com.phihai91.springgraphql.exceptions.ConflictResourceException;
 import com.phihai91.springgraphql.payloads.AuthModel;
 import com.phihai91.springgraphql.repositories.IUserRepository;
 import com.phihai91.springgraphql.securities.JwtTokenProvider;
 import com.phihai91.springgraphql.ultis.UserHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
@@ -38,19 +38,11 @@ public class UserService implements IUserService {
                 .roles(List.of(Role.USER))
                 .build();
 
-        //TODO Throw GraphQL Exeception
-        if (isEmail) {
-            return userRepository.existsUserByEmail(newUser.email())
-                    .flatMap(exists -> (exists) ? Mono.error(new UsernameNotFoundException("Email existed"))
-                            : userRepository.save(newUser))
-                    .log()
-                    .map(user -> user.toGetRegistrationUserPayload(user.id()));
-        }
+        log.info(newUser.toString());
 
-        return userRepository.existsUserByUsername(newUser.username())
-                .flatMap(exists -> (exists) ? Mono.error(new UsernameNotFoundException("Username existed"))
+        return userRepository.existsUserByUsernameEqualsOrEmailEquals(input.usernameOrEmail(), input.usernameOrEmail())
+                .flatMap(exists -> (exists) ? Mono.error(new ConflictResourceException("Username or email existed"))
                         : userRepository.save(newUser))
-                .log()
                 .map(user -> user.toGetRegistrationUserPayload(user.id()));
     }
 
