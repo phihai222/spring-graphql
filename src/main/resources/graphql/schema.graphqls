@@ -102,7 +102,7 @@ type RegistrationUserPayload {
 }
 
 input RegistrationUserInput {
-    usernameOrEmail: String! @Pattern(regexp: "\\S*", message: "White space is not accept") @Size(min:5, max:15)
+    usernameOrEmail: String! @Pattern(regexp: "\\S*", message: "White space is not accept") @Size(min:5, max:50)
     password: String! @Pattern(regexp: "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,50}$", message: "Has range 8-50 characters, At least 1 uppercase, 1 lowercase, 1 digit, 1 special character English letter")
 }
 

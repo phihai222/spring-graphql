@@ -7,7 +7,6 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Document
@@ -25,10 +24,9 @@ public record User(
         List<UserPost> posts,
         Boolean active,
 
-        List<String> roles
+        List<Role> roles
 ) {
         public User {
-                roles = new ArrayList<>();
                 active = true;
         }
 
