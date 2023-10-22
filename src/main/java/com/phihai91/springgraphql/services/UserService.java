@@ -8,9 +8,6 @@ import com.phihai91.springgraphql.securities.JwtTokenProvider;
 import com.phihai91.springgraphql.ultis.UserHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
-import org.springframework.security.authentication.ReactiveAuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -29,9 +26,6 @@ public class UserService implements IUserService {
 
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
-
-    @Autowired
-    private ReactiveAuthenticationManager authenticationManager;
 
     @Override
     public Mono<AuthModel.RegistrationUserPayload> registrationUser(AuthModel.RegistrationUserInput input) {
@@ -61,22 +55,8 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public Mono<AuthModel.VerifyOtpPayload> getToken(Mono<AuthModel.RegistrationUserInput> authRequest) {
-        return authRequest
-                .flatMap(login -> this.authenticationManager
-                        .authenticate(new UsernamePasswordAuthenticationToken(
-                                login.usernameOrEmail(), login.password()))
-                        .log()
-                        .map(this.jwtTokenProvider::createToken))
-                .log()
-                .map(jwt -> {
-                    HttpHeaders httpHeaders = new HttpHeaders();
-                    httpHeaders.add(HttpHeaders.AUTHORIZATION, "Bearer " + jwt);
-                    return AuthModel.VerifyOtpPayload.builder()
-                            .accessToken(jwt)
-                            .expiredDate(2323232L)
-                            .signedDate(23232323L)
-                            .build();
-                });
+    public Mono<AuthModel.VerifyOtpPayload> getToken(String userId) {
+        return userRepository.findById(userId)
+                .map(user -> jwtTokenProvider.createToken(user));
     }
 }

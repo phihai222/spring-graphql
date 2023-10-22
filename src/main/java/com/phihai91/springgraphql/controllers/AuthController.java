@@ -25,14 +25,7 @@ public class AuthController {
     }
     @SchemaMapping(typeName = "RegistrationUserPayload", field = "credentials")
     Mono<AuthModel.VerifyOtpPayload> credentials(AuthModel.RegistrationUserPayload registrationUserPayload) {
-        log.info(registrationUserPayload.id());
-
-        //TODO pass userId to get Token
-
-        return userService.getToken(Mono.just(AuthModel.RegistrationUserInput.builder()
-                        .usernameOrEmail("asdasdas")
-                        .password("asSd@232")
-                .build()));
+        return userService.getToken(registrationUserPayload.id());
     }
 
     @MutationMapping
