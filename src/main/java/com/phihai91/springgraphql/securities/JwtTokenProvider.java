@@ -1,5 +1,7 @@
 package com.phihai91.springgraphql.securities;
 
+import com.phihai91.springgraphql.configs.AppUserDetails;
+import com.phihai91.springgraphql.entities.Role;
 import com.phihai91.springgraphql.entities.User;
 import com.phihai91.springgraphql.payloads.AuthModel;
 import io.jsonwebtoken.Jwts;
@@ -7,12 +9,14 @@ import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
 import java.util.List;
@@ -38,6 +42,24 @@ public class JwtTokenProvider {
         var secret = Base64.getEncoder()
                 .encodeToString(jwtSecret.getBytes());
         this.secretKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+    }
+
+    public AuthModel.VerifyOtpPayload creatToken(Authentication authentication) {
+        AppUserDetails userPrincipal = (AppUserDetails) authentication.getPrincipal();
+
+        List<Role> roles = new ArrayList<>();
+        for (var authority : userPrincipal.getAuthorities()) {
+            roles.add(Role.valueOf(authority.getAuthority()));
+        }
+
+        User user = User.builder()
+                .id(userPrincipal.getId())
+                .email(userPrincipal.getEmail())
+                .username(authentication.getName())
+                .roles(roles)
+                .build();
+
+        return createToken(user);
     }
 
     public AuthModel.VerifyOtpPayload createToken(User user) {

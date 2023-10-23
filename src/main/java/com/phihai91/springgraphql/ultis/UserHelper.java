@@ -11,4 +11,10 @@ public class UserHelper {
                 .matcher(userNameOrEmail)
                 .find();
     }
+
+    public static String getOtp(String userId) {
+        System.out.println(userId);
+        //TODO Create TOTP
+        return "999999";
+    }
 }

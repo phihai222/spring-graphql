@@ -8,11 +8,13 @@ import org.springframework.security.authentication.UserDetailsRepositoryReactive
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+
+import java.util.stream.Collectors;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
@@ -30,15 +32,18 @@ public class SecurityConfig {
 
     @Bean
     public ReactiveUserDetailsService userDetailsService(IUserRepository users) {
-        return username -> users.findByUsername(username)
-                .map(u -> User
-                        .withUsername(u.username()).password(u.password())
-                        .authorities(u.roles().toArray(new String[0]))
-                        .accountExpired(!u.active())
-                        .credentialsExpired(!u.active())
-                        .disabled(!u.active())
-                        .accountLocked(!u.active())
-                        .build()
+        return username -> users.findByUsernameEqualsOrEmailEquals(username, username)
+                .map(u -> AppUserDetails
+                                .builder()
+                                .id(u.id())
+                                .username(u.username())
+                                .email(u.email())
+                                .authorities(u.roles()
+                                        .stream()
+                                        .map(role -> new SimpleGrantedAuthority(role.name()))
+                                        .collect(Collectors.toList()))
+                                .password(u.password())
+                                .build()
                 );
     }
 

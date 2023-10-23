@@ -29,11 +29,8 @@ public class AuthController {
     }
 
     @MutationMapping
-    AuthModel.LoginUserPayload loginUser(@Argument AuthModel.LoginUserInput input) {
-        return AuthModel.LoginUserPayload.builder()
-                .sentTo(input.userOrEmail())
-                .otp("9282833")
-                .build();
+    Mono<AuthModel.LoginUserPayload> loginUser(@Argument AuthModel.LoginUserInput input) {
+        return userService.login(input);
     }
 
     @MutationMapping
