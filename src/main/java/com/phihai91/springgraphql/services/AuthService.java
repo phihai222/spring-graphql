@@ -10,7 +10,6 @@ import com.phihai91.springgraphql.securities.JwtTokenProvider;
 import com.phihai91.springgraphql.ultis.UserHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -35,7 +34,7 @@ public class AuthService implements IAuthService {
     private ReactiveAuthenticationManager authenticationManager;
 
     @Autowired
-    private ReactiveStringRedisTemplate redisTemplate;
+    private IRedisService redisService;
 
     @Override
     public Mono<AuthModel.RegistrationUserPayload> registrationUser(AuthModel.RegistrationUserInput input) {
@@ -73,7 +72,7 @@ public class AuthService implements IAuthService {
                             AppUserDetails appUser = (AppUserDetails) authentication.getPrincipal();
                             return getOtp(appUser);
                         }))
-                .doOnNext(loginUserPayload -> redisTemplate.opsForHash().put(loginUserPayload.userId(), "email", loginUserPayload.sentTo()).block());
+                .flatMap(loginUserPayload->  redisService.saveOtp(loginUserPayload));
     }
 
     @Override
