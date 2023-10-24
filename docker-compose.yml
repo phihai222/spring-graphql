@@ -48,6 +48,14 @@ services:
       ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_PASSWORD}
       ME_CONFIG_MONGODB_URL: mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongo:27017/
 
+  redis:
+      image: redis
+      container_name: redis
+      ports:
+        - "6379:6379"
+      networks:
+        - social-network
+
 networks:
   social-network:
     driver: bridge

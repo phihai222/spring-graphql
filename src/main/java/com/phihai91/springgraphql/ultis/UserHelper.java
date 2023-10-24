@@ -2,6 +2,8 @@ package com.phihai91.springgraphql.ultis;
 
 import com.phihai91.springgraphql.configs.AppUserDetails;
 import com.phihai91.springgraphql.payloads.AuthModel;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.regex.Pattern;
