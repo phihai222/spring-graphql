@@ -1,5 +1,7 @@
 package com.phihai91.springgraphql.ultis;
 
+import com.phihai91.springgraphql.configs.AppUserDetails;
+import com.phihai91.springgraphql.payloads.AuthModel;
 import org.springframework.stereotype.Component;
 
 import java.util.regex.Pattern;
@@ -12,9 +14,12 @@ public class UserHelper {
                 .find();
     }
 
-    public static String getOtp(String userId) {
-        System.out.println(userId);
-        //TODO Create TOTP
-        return "999999";
+    public static AuthModel.LoginUserPayload getOtp(AppUserDetails appUser) {
+        return AuthModel.LoginUserPayload.builder()
+                .userId(appUser.getId())
+                .twoMF(appUser.getTwoMF())
+                .sentTo(appUser.getTwoMF() ? appUser.getEmail() : null)
+                .otp(appUser.getTwoMF() ? "9999999" : null)
+                .build();
     }
 }

@@ -34,16 +34,17 @@ public class SecurityConfig {
     public ReactiveUserDetailsService userDetailsService(IUserRepository users) {
         return username -> users.findByUsernameEqualsOrEmailEquals(username, username)
                 .map(u -> AppUserDetails
-                                .builder()
-                                .id(u.id())
-                                .username(u.username())
-                                .email(u.email())
-                                .authorities(u.roles()
-                                        .stream()
-                                        .map(role -> new SimpleGrantedAuthority(role.name()))
-                                        .collect(Collectors.toList()))
-                                .password(u.password())
-                                .build()
+                        .builder()
+                        .id(u.id())
+                        .twoMF(u.twoMF())
+                        .username(u.username())
+                        .email(u.email())
+                        .authorities(u.roles()
+                                .stream()
+                                .map(role -> new SimpleGrantedAuthority(role.name()))
+                                .collect(Collectors.toList()))
+                        .password(u.password())
+                        .build()
                 );
     }
 

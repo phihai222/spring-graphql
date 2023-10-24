@@ -24,16 +24,19 @@ public class AppUserDetails implements UserDetails {
 
     private String password;
 
-    private Collection<? extends GrantedAuthority> authorities;
-
-    public AppUserDetails(String id, String username, String email, String password,
-                           Collection<? extends GrantedAuthority> authorities) {
+    public AppUserDetails(String id, String username, String email, String password, Boolean twoMF, Collection<? extends GrantedAuthority> authorities) {
         this.id = id;
         this.username = username;
         this.email = email;
         this.password = password;
+        this.twoMF = twoMF;
         this.authorities = authorities;
     }
+
+    private Boolean twoMF;
+
+    private Collection<? extends GrantedAuthority> authorities;
+
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

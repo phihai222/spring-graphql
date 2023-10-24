@@ -1,6 +1,5 @@
 package com.phihai91.springgraphql.payloads;
 
-import com.phihai91.springgraphql.entities.User;
 import lombok.Builder;
 
 public class AuthModel {
@@ -8,12 +7,6 @@ public class AuthModel {
     public record RegistrationUserInput(
             String usernameOrEmail,
             String password) {
-        public User toUser() {
-            return User.builder()
-                    .username(usernameOrEmail)
-                    .password(password)
-                    .build();
-        }
     }
 
     @Builder
@@ -41,8 +34,11 @@ public class AuthModel {
 
     @Builder
     public record LoginUserPayload(
+            String userId,
             String sentTo,
-            String otp
+            String otp,
+            Boolean twoMF,
+            VerifyOtpPayload credentials
     ) {
     }
 

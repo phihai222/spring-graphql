@@ -23,14 +23,22 @@ public class AuthController {
     Mono<AuthModel.RegistrationUserPayload> registrationUser(@Argument AuthModel.RegistrationUserInput input) {
         return userService.registrationUser(input);
     }
+
     @SchemaMapping(typeName = "RegistrationUserPayload", field = "credentials")
     Mono<AuthModel.VerifyOtpPayload> credentials(AuthModel.RegistrationUserPayload registrationUserPayload) {
         return userService.getToken(registrationUserPayload.id());
     }
 
+
     @MutationMapping
     Mono<AuthModel.LoginUserPayload> loginUser(@Argument AuthModel.LoginUserInput input) {
         return userService.login(input);
+    }
+
+    @SchemaMapping(typeName = "LoginUserPayload", field = "credentials")
+    Mono<AuthModel.VerifyOtpPayload> credentials(AuthModel.LoginUserPayload loginUserPayload) {
+        if (loginUserPayload.twoMF()) return null;
+        return userService.getToken(loginUserPayload.userId());
     }
 
     @MutationMapping

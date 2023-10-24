@@ -41,6 +41,7 @@ public class UserService implements IUserService {
                 .username(isEmail ? null : input.usernameOrEmail())
                 .email(isEmail ? input.usernameOrEmail() : null)
                 .password(passwordEncoder.encode(input.password()))
+                .twoMF(false)
                 .roles(List.of(Role.USER))
                 .build();
 
@@ -66,11 +67,7 @@ public class UserService implements IUserService {
                                 login.userOrEmail(), login.password()))
                         .map(authentication -> {
                             AppUserDetails appUser = (AppUserDetails) authentication.getPrincipal();
-                            return UserHelper.getOtp(appUser.getId());
-                        }))
-                .map(s -> AuthModel.LoginUserPayload.builder()
-                        .otp(s)
-                        .sentTo("test")
-                        .build());
+                            return UserHelper.getOtp(appUser);
+                        }));
     }
 }

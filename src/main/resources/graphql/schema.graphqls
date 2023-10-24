@@ -119,8 +119,11 @@ input VerifyOtpInput {
 }
 
 type LoginUserPayload {
-    sentTo: String!
+    id: ID!
+    twoMF: Boolean!,
+    sentTo: String
     otp: String
+    credentials: VerifyOtpPayload
 }
 
 input LoginUserInput {
