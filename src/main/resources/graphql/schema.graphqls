@@ -119,7 +119,7 @@ input VerifyOtpInput {
 }
 
 type LoginUserPayload {
-    id: ID!
+    userId: ID!
     twoMF: Boolean!,
     sentTo: String
     otp: String

@@ -10,6 +10,7 @@ import com.phihai91.springgraphql.securities.JwtTokenProvider;
 import com.phihai91.springgraphql.ultis.UserHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,7 +21,7 @@ import java.util.List;
 
 @Service
 @Slf4j
-public class UserService implements IUserService {
+public class AuthService implements IAuthService {
     @Autowired
     private IUserRepository userRepository;
 
@@ -32,6 +33,9 @@ public class UserService implements IUserService {
 
     @Autowired
     private ReactiveAuthenticationManager authenticationManager;
+
+    @Autowired
+    private ReactiveStringRedisTemplate redisTemplate;
 
     @Override
     public Mono<AuthModel.RegistrationUserPayload> registrationUser(AuthModel.RegistrationUserInput input) {
@@ -67,7 +71,20 @@ public class UserService implements IUserService {
                                 login.userOrEmail(), login.password()))
                         .map(authentication -> {
                             AppUserDetails appUser = (AppUserDetails) authentication.getPrincipal();
-                            return UserHelper.getOtp(appUser);
-                        }));
+                            return getOtp(appUser);
+                        }))
+                .doOnNext(loginUserPayload -> redisTemplate.opsForHash().put(loginUserPayload.userId(), "email", loginUserPayload.sentTo()).block());
+    }
+
+    @Override
+    public AuthModel.LoginUserPayload getOtp(AppUserDetails appUser) {
+        String otp = "999999";
+
+        return AuthModel.LoginUserPayload.builder()
+                .userId(appUser.getId())
+                .twoMF(appUser.getTwoMF())
+                .sentTo(appUser.getTwoMF() ? appUser.getEmail() : null)
+                .otp(appUser.getTwoMF() ? otp : null)
+                .build();
     }
 }

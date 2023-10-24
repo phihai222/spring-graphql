@@ -1,7 +1,7 @@
 package com.phihai91.springgraphql.controllers;
 
 import com.phihai91.springgraphql.payloads.AuthModel;
-import com.phihai91.springgraphql.services.IUserService;
+import com.phihai91.springgraphql.services.IAuthService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.graphql.data.method.annotation.Argument;
@@ -17,7 +17,7 @@ import java.util.Date;
 public class AuthController {
 
     @Autowired
-    private IUserService userService;
+    private IAuthService userService;
 
     @MutationMapping
     Mono<AuthModel.RegistrationUserPayload> registrationUser(@Argument AuthModel.RegistrationUserInput input) {
