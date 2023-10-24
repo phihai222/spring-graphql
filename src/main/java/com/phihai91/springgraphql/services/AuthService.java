@@ -67,7 +67,8 @@ public class AuthService implements IAuthService {
         return Mono.just(input)
                 .flatMap(login -> this.authenticationManager
                         .authenticate(new UsernamePasswordAuthenticationToken(
-                                login.userOrEmail(), login.password()))
+                                login.usernameOrEmail(), login.password()))
+                        .log()
                         .map(authentication -> {
                             AppUserDetails appUser = (AppUserDetails) authentication.getPrincipal();
                             return getOtp(appUser);

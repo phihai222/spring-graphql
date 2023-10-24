@@ -44,7 +44,7 @@ public class AuthController {
     @MutationMapping
     AuthModel.VerifyOtpPayload verifyOtp(@Argument AuthModel.VerifyOtpInput input) {
         return AuthModel.VerifyOtpPayload.builder()
-                .accessToken(input.userOrEmail())
+                .accessToken(input.usernameOrEmail())
                 .expiredDate(new Date().getTime() + 1000)
                 .signedDate(new Date().getTime())
                 .type("Bearer")
