@@ -41,8 +41,8 @@ public class AuthService implements IAuthService {
         Boolean isEmail = UserHelper.isEmail(input.usernameOrEmail());
 
         User newUser = User.builder()
-                .username(isEmail ? null : input.usernameOrEmail())
-                .email(isEmail ? input.usernameOrEmail() : null)
+                .username(isEmail ? null : input.usernameOrEmail().toLowerCase())
+                .email(isEmail ? input.usernameOrEmail().toLowerCase() : null)
                 .password(passwordEncoder.encode(input.password()))
                 .twoMF(false)
                 .roles(List.of(Role.USER))
@@ -67,7 +67,7 @@ public class AuthService implements IAuthService {
         return Mono.just(input)
                 .flatMap(login -> this.authenticationManager
                         .authenticate(new UsernamePasswordAuthenticationToken(
-                                login.usernameOrEmail(), login.password()))
+                                login.usernameOrEmail().toLowerCase(), login.password()))
                         .log()
                         .map(authentication -> {
                             AppUserDetails appUser = (AppUserDetails) authentication.getPrincipal();
