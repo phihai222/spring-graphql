@@ -3,6 +3,7 @@ package com.phihai91.springgraphql.services;
 import com.phihai91.springgraphql.configs.AppUserDetails;
 import com.phihai91.springgraphql.entities.Role;
 import com.phihai91.springgraphql.entities.User;
+import com.phihai91.springgraphql.exceptions.BadRequestException;
 import com.phihai91.springgraphql.exceptions.ConflictResourceException;
 import com.phihai91.springgraphql.payloads.AuthModel;
 import com.phihai91.springgraphql.repositories.IUserRepository;
@@ -16,7 +17,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import java.text.DecimalFormat;
 import java.util.List;
+import java.util.Random;
 
 @Service
 @Slf4j
@@ -66,9 +69,9 @@ public class AuthService implements IAuthService {
     public Mono<AuthModel.LoginUserPayload> login(AuthModel.LoginUserInput input) {
         return Mono.just(input)
                 .flatMap(login -> this.authenticationManager
-                        .authenticate(new UsernamePasswordAuthenticationToken(
+                        .authenticate( new UsernamePasswordAuthenticationToken(
                                 login.usernameOrEmail().toLowerCase(), login.password()))
-                        .log()
+                        .onErrorMap(error -> new BadRequestException(error.getMessage()))
                         .map(authentication -> {
                             AppUserDetails appUser = (AppUserDetails) authentication.getPrincipal();
                             return getOtp(appUser);
@@ -78,7 +81,7 @@ public class AuthService implements IAuthService {
 
     @Override
     public AuthModel.LoginUserPayload getOtp(AppUserDetails appUser) {
-        String otp = "999999";
+        String otp = new DecimalFormat("000000").format(new Random().nextInt(999999));
 
         return AuthModel.LoginUserPayload.builder()
                 .userId(appUser.getId())
