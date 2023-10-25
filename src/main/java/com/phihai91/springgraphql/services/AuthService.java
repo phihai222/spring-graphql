@@ -69,14 +69,14 @@ public class AuthService implements IAuthService {
     public Mono<AuthModel.LoginUserPayload> login(AuthModel.LoginUserInput input) {
         return Mono.just(input)
                 .flatMap(login -> this.authenticationManager
-                        .authenticate( new UsernamePasswordAuthenticationToken(
+                        .authenticate(new UsernamePasswordAuthenticationToken(
                                 login.usernameOrEmail().toLowerCase(), login.password()))
                         .onErrorMap(error -> new BadRequestException(error.getMessage()))
                         .map(authentication -> {
                             AppUserDetails appUser = (AppUserDetails) authentication.getPrincipal();
                             return getOtp(appUser);
                         }))
-                .flatMap(loginUserPayload->  redisService.saveOtp(loginUserPayload));
+                .flatMap(loginUserPayload -> redisService.saveOtp(loginUserPayload));
     }
 
     @Override
@@ -89,5 +89,13 @@ public class AuthService implements IAuthService {
                 .sentTo(appUser.getTwoMF() ? appUser.getEmail() : null)
                 .otp(appUser.getTwoMF() ? otp : null)
                 .build();
+    }
+
+    @Override
+    public Mono<AuthModel.VerifyOtpPayload> verifyOtp(AuthModel.VerifyOtpInput input) {
+        return Mono.just(input)
+                .flatMap(verifyOtpInput -> redisService.getOtp(input))
+                .flatMap(o -> o.equals(input.otp()) ? getToken(input.userId()) : Mono.error(new BadRequestException("Invalid OTP")));
+        //TODO remove OTP on Redis
     }
 }

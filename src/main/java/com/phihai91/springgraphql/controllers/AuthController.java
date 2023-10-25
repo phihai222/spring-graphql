@@ -10,8 +10,6 @@ import org.springframework.graphql.data.method.annotation.SchemaMapping;
 import org.springframework.stereotype.Controller;
 import reactor.core.publisher.Mono;
 
-import java.util.Date;
-
 @Controller
 @Slf4j
 public class AuthController {
@@ -43,11 +41,6 @@ public class AuthController {
 
     @MutationMapping
     Mono<AuthModel.VerifyOtpPayload> verifyOtp(@Argument AuthModel.VerifyOtpInput input) {
-        return Mono.just(AuthModel.VerifyOtpPayload.builder()
-                .accessToken(input.usernameOrEmail())
-                .expiredDate(new Date().getTime() + 1000)
-                .signedDate(new Date().getTime())
-                .type("Bearer")
-                .build());
+        return userService.verifyOtp(input);
     }
 }

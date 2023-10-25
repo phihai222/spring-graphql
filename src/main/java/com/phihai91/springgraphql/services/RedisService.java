@@ -19,17 +19,33 @@ public class RedisService implements IRedisService {
 
     @Autowired
     private ReactiveStringRedisTemplate redisTemplate;
+
     @Override
     public Mono<AuthModel.LoginUserPayload> saveOtp(AuthModel.LoginUserPayload loginUserPayload) {
-        if(!loginUserPayload.twoMF())
+        if (!loginUserPayload.twoMF())
             return Mono.just(loginUserPayload);
 
         Map<String, String> otpMap = new HashMap<>();
         otpMap.put(Constants.REDIS_KEY_EMAIL, loginUserPayload.sentTo());
         otpMap.put(Constants.REDIS_KEY_OTP, loginUserPayload.otp());
 
-        return redisTemplate.opsForHash().putAll(loginUserPayload.userId(), otpMap)
-                .flatMap(r -> redisTemplate.expire(loginUserPayload.userId(), Duration.ofSeconds(otpExpirationSeconds)))
+        //TODO refactor return bool
+        return redisTemplate.opsForHash().putAll(
+                        Constants.REDIS_OTP_PREFIX + loginUserPayload.userId(), otpMap)
+                .flatMap(r -> redisTemplate.expire(
+                        Constants.REDIS_OTP_PREFIX + loginUserPayload.userId(),
+                        Duration.ofSeconds(otpExpirationSeconds)))
                 .map(r -> loginUserPayload);
+    }
+
+    @Override
+    public Mono<Object> getOtp(AuthModel.VerifyOtpInput input) {
+        return redisTemplate.opsForHash().get(Constants.REDIS_OTP_PREFIX + input.userId(), Constants.REDIS_KEY_OTP);
+    }
+
+    @Override
+    public Mono<AuthModel.VerifyOtpPayload> removeOTP(AuthModel.VerifyOtpPayload verifyOtpPayload, String userId) {
+        return redisTemplate.opsForHash().delete(Constants.REDIS_OTP_PREFIX + userId)
+                .map(aBoolean -> verifyOtpPayload);
     }
 }

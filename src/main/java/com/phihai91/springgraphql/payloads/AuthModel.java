@@ -44,7 +44,7 @@ public class AuthModel {
 
     @Builder
     public record VerifyOtpInput(
-            String usernameOrEmail,
+            String userId,
             String otp
     ) {
     }

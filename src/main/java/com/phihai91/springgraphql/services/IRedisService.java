@@ -5,4 +5,8 @@ import reactor.core.publisher.Mono;
 
 public interface IRedisService {
     Mono<AuthModel.LoginUserPayload> saveOtp(AuthModel.LoginUserPayload loginUserPayload);
+
+    Mono<Object> getOtp(AuthModel.VerifyOtpInput input);
+
+    Mono<AuthModel.VerifyOtpPayload> removeOTP(AuthModel.VerifyOtpPayload verifyOtpPayload, String userId);
 }

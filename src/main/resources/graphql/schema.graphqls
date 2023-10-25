@@ -114,7 +114,7 @@ type VerifyOtpPayload {
 }
 
 input VerifyOtpInput {
-    usernameOrEmail: String @Pattern(regexp: "\\S*", message: "White space is not accept") @Size(min:5, max:15)
+    userId: String!
     otp: String! @Size(min: 6, max: 6)
 }
 
