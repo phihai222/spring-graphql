@@ -14,8 +14,8 @@ import java.util.Map;
 
 @Service
 public class RedisService implements IRedisService {
-    @Value("${otpExpirationSecond}")
-    private int otpExpirationMs;
+    @Value("${otpExpirationSeconds}")
+    private int otpExpirationSeconds;
 
     @Autowired
     private ReactiveStringRedisTemplate redisTemplate;
@@ -29,7 +29,7 @@ public class RedisService implements IRedisService {
         otpMap.put(Constants.REDIS_KEY_OTP, loginUserPayload.otp());
 
         return redisTemplate.opsForHash().putAll(loginUserPayload.userId(), otpMap)
-                .flatMap(r -> redisTemplate.expire(loginUserPayload.userId(), Duration.ofSeconds(otpExpirationMs)))
+                .flatMap(r -> redisTemplate.expire(loginUserPayload.userId(), Duration.ofSeconds(otpExpirationSeconds)))
                 .map(r -> loginUserPayload);
     }
 }

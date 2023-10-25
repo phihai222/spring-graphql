@@ -18,4 +18,4 @@ logging:
 
 jwtSecret: ${JWT_SECRET}
 jwtExpirationMs: 600000
-otpExpirationSecond: 30
+otpExpirationSeconds: 30
