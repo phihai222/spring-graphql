@@ -1,6 +1,6 @@
 package com.phihai91.springgraphql.services;
 
-import com.phihai91.springgraphql.configs.AppUserDetails;
+import com.phihai91.springgraphql.securities.AppUserDetails;
 import com.phihai91.springgraphql.payloads.AuthModel;
 import reactor.core.publisher.Mono;
 

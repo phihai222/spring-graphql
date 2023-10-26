@@ -1,4 +1,4 @@
-package com.phihai91.springgraphql.configs;
+package com.phihai91.springgraphql.securities;
 
 import lombok.Builder;
 import lombok.Getter;

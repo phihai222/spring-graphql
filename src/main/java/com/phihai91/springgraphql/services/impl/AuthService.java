@@ -1,6 +1,6 @@
 package com.phihai91.springgraphql.services.impl;
 
-import com.phihai91.springgraphql.configs.AppUserDetails;
+import com.phihai91.springgraphql.securities.AppUserDetails;
 import com.phihai91.springgraphql.entities.Role;
 import com.phihai91.springgraphql.entities.User;
 import com.phihai91.springgraphql.exceptions.BadRequestException;
@@ -98,6 +98,7 @@ public class AuthService implements IAuthService {
     public Mono<AuthModel.VerifyOtpPayload> verifyOtp(AuthModel.VerifyOtpInput input) {
         return Mono.just(input)
                 .flatMap(verifyOtpInput -> redisService.getOtp(input))
+                //TODO Throw exception if otp not existed
                 .flatMap(o -> o.equals(input.otp()) ? getToken(input.userId())
                         .map(tokenObj -> new AbstractMap.SimpleImmutableEntry<>(input.userId(), tokenObj))
                         : Mono.error(new BadRequestException("Invalid OTP")))
