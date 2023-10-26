@@ -99,7 +99,8 @@ public class AuthService implements IAuthService {
                 .flatMap(o -> o.equals(input.otp()) ? getToken(input.userId())
                         .map(tokenObj -> new AbstractMap.SimpleImmutableEntry<>(input.userId(), tokenObj))
                         : Mono.error(new BadRequestException("Invalid OTP")))
-                .flatMap(o -> redisService.removeOTP(o.getKey(), o.getValue())
+                //TODO make removeOTP run on background not return.
+                .flatMap(o -> redisService.removeOTP(o.getKey())
                         .map(aBoolean -> o.getValue()));
     }
 }

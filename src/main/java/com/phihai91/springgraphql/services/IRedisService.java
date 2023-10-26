@@ -9,5 +9,5 @@ public interface IRedisService {
     Mono<Object> getOtp(AuthModel.VerifyOtpInput input);
 
 
-    Mono<Boolean> removeOTP(String userId, AuthModel.VerifyOtpPayload verifyOtpPayload);
+    Mono<Boolean> removeOTP(String userId);
 }

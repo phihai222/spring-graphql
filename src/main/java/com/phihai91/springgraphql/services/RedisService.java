@@ -44,7 +44,7 @@ public class RedisService implements IRedisService {
     }
 
     @Override
-    public Mono<Boolean> removeOTP(String userId, AuthModel.VerifyOtpPayload verifyOtpPayload) {
+    public Mono<Boolean> removeOTP(String userId) {
         return redisTemplate.opsForHash().delete(Constants.REDIS_OTP_PREFIX + userId);
     }
 }
