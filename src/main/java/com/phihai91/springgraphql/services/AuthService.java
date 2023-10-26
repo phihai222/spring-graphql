@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
 import java.text.DecimalFormat;
+import java.util.AbstractMap;
 import java.util.List;
 import java.util.Random;
 
@@ -95,7 +96,10 @@ public class AuthService implements IAuthService {
     public Mono<AuthModel.VerifyOtpPayload> verifyOtp(AuthModel.VerifyOtpInput input) {
         return Mono.just(input)
                 .flatMap(verifyOtpInput -> redisService.getOtp(input))
-                .flatMap(o -> o.equals(input.otp()) ? getToken(input.userId()) : Mono.error(new BadRequestException("Invalid OTP")));
-        //TODO remove OTP on Redis
+                .flatMap(o -> o.equals(input.otp()) ? getToken(input.userId())
+                        .map(tokenObj -> new AbstractMap.SimpleImmutableEntry<>(input.userId(), tokenObj))
+                        : Mono.error(new BadRequestException("Invalid OTP")))
+                .flatMap(o -> redisService.removeOTP(o.getKey(), o.getValue())
+                        .map(aBoolean -> o.getValue()));
     }
 }
