@@ -1,6 +1,7 @@
-package com.phihai91.springgraphql.services;
+package com.phihai91.springgraphql.services.impl;
 
 import com.phihai91.springgraphql.payloads.AuthModel;
+import com.phihai91.springgraphql.services.IRedisService;
 import com.phihai91.springgraphql.ultis.Constants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;

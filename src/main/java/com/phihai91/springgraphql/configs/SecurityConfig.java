@@ -52,9 +52,10 @@ public class SecurityConfig {
     SecurityWebFilterChain springWebFilterChain(ServerHttpSecurity http) {
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
-                // Demonstrate that method security works
-                // Best practice to use both for defense in depth
-                .authorizeExchange(requests -> requests.anyExchange().permitAll())
+                .authorizeExchange(requests -> requests
+                        .pathMatchers("/graphiql").permitAll()
+                        .pathMatchers("/graphql").permitAll()
+                        .anyExchange().authenticated())
                 .httpBasic(withDefaults())
                 .build();
     }
