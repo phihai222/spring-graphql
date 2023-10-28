@@ -56,6 +56,7 @@ public class SecurityConfig {
                 .authorizeExchange(requests -> requests
                         .pathMatchers("/graphiql").permitAll()
                         .pathMatchers("/graphql").permitAll()
+                        .pathMatchers("/actuator/**").permitAll()
                         .anyExchange().authenticated())
                 .httpBasic(withDefaults())
                 .build();

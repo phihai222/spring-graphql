@@ -19,3 +19,12 @@ logging:
 jwtSecret: ${JWT_SECRET}
 jwtExpirationMs: 600000
 otpExpirationSeconds: 30000000
+
+#Healthcheck endpoint with details: actuator/health/custom
+management:
+  endpoint:
+    health:
+      group:
+        custom:
+          show-components: always
+          show-details: always
