@@ -30,7 +30,7 @@ type User {
     firstName: String
     lastName: String
     email: String
-    registrationDate: Int
+    registrationDate: Float
     avatarUrl: String
 }
 
