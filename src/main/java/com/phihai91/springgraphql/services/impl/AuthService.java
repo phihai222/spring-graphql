@@ -51,7 +51,7 @@ public class AuthService implements IAuthService {
                 .email(isEmail ? input.usernameOrEmail().toLowerCase() : null)
                 .password(passwordEncoder.encode(input.password()))
                 .twoMF(false)
-                .roles(List.of(Role.USER))
+                .roles(List.of(Role.ROLE_USER))
                 .build();
 
         log.info(newUser.toString());

@@ -13,8 +13,7 @@ import java.util.List;
 @Service
 public class PostService implements IPostService {
     @Override
-    @PreAuthorize("hasAuthority('USER')")
-    //TODO change to Role Based
+    @PreAuthorize("hasRole('USER')")
     public Mono<PostModel.CreatePostPayload> createPost(PostModel.CreatePostInput input) {
         return ReactiveSecurityContextHolder.getContext()
                 .map(securityContext -> {
