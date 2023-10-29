@@ -79,7 +79,8 @@ public class AuthService implements IAuthService {
                             AppUserDetails appUser = (AppUserDetails) authentication.getPrincipal();
                             return getOtp(appUser);
                         }))
-                .flatMap(loginUserPayload -> redisService.saveOtp(loginUserPayload));
+                .publishOn(Schedulers.boundedElastic())
+                .doOnNext(loginUserPayload -> redisService.saveOtp(loginUserPayload).subscribe());
     }
 
     @Override

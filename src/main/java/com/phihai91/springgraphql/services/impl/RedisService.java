@@ -23,21 +23,19 @@ public class RedisService implements IRedisService {
     private ReactiveStringRedisTemplate redisTemplate;
 
     @Override
-    public Mono<AuthModel.LoginUserPayload> saveOtp(AuthModel.LoginUserPayload loginUserPayload) {
+    public Mono<Boolean> saveOtp(AuthModel.LoginUserPayload loginUserPayload) {
         if (!loginUserPayload.twoMF())
-            return Mono.just(loginUserPayload);
+            return Mono.just(false);
 
         Map<String, String> otpMap = new HashMap<>();
         otpMap.put(Constants.REDIS_KEY_EMAIL, loginUserPayload.sentTo());
         otpMap.put(Constants.REDIS_KEY_OTP, loginUserPayload.otp());
 
-        //TODO refactor return bool
         return redisTemplate.opsForHash().putAll(
                         Constants.REDIS_OTP_PREFIX + loginUserPayload.userId(), otpMap)
                 .flatMap(r -> redisTemplate.expire(
                         Constants.REDIS_OTP_PREFIX + loginUserPayload.userId(),
-                        Duration.ofSeconds(otpExpirationSeconds)))
-                .map(r -> loginUserPayload);
+                        Duration.ofSeconds(otpExpirationSeconds)));
     }
 
     @Override
