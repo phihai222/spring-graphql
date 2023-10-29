@@ -18,9 +18,9 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.text.DecimalFormat;
-import java.util.AbstractMap;
 import java.util.List;
 import java.util.Random;
 
@@ -99,10 +99,8 @@ public class AuthService implements IAuthService {
         return Mono.just(input)
                 .flatMap(verifyOtpInput -> redisService.getOtp(input))
                 .flatMap(o -> o.equals(input.otp()) ? getToken(input.userId())
-                        .map(tokenObj -> new AbstractMap.SimpleImmutableEntry<>(input.userId(), tokenObj))
                         : Mono.error(new BadRequestException("Invalid OTP")))
-                //TODO make removeOTP run on background not return.
-                .flatMap(o -> redisService.removeOTP(o.getKey())
-                        .map(aBoolean -> o.getValue()));
+                .publishOn(Schedulers.boundedElastic()) //Fire and forget
+                .doOnNext(verifyOtpPayload -> redisService.removeOTP(input.userId()).log().subscribe());
     }
 }
