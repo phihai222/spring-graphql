@@ -1,5 +1,6 @@
 package com.phihai91.springgraphql.services.impl;
 
+import com.phihai91.springgraphql.entities.UserInfo;
 import com.phihai91.springgraphql.securities.AppUserDetails;
 import com.phihai91.springgraphql.entities.Role;
 import com.phihai91.springgraphql.entities.User;
@@ -49,6 +50,10 @@ public class AuthService implements IAuthService {
         User newUser = User.builder()
                 .username(isEmail ? null : input.usernameOrEmail().toLowerCase())
                 .email(isEmail ? input.usernameOrEmail().toLowerCase() : null)
+                .userInfo(UserInfo.builder()
+                        .firstName(input.usernameOrEmail())
+                        .lastName("")
+                        .build())
                 .password(passwordEncoder.encode(input.password()))
                 .twoMF(false)
                 .roles(List.of(Role.ROLE_USER))

@@ -21,7 +21,8 @@ public class PostModel {
     @Builder
     public record Post(
             String id,
-            String fullUserName,
+            String firstName,
+            String lastName,
             String content,
             List<String> photoUrl,
             List<CommentModel.Comment> comments

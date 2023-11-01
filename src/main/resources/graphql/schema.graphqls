@@ -36,7 +36,8 @@ type User {
 
 type Post {
     id: ID!
-    fullUserName: String
+    firstName: String,
+    lastName: String,
     content: String
     photoUrl: [String]
     comments: [Comment]
