@@ -1,5 +1,6 @@
 package com.phihai91.springgraphql.entities;
 
+import com.phihai91.springgraphql.payloads.PostModel;
 import lombok.Builder;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -26,4 +27,16 @@ public record Post(
         List<Comment> comments,
         List<Like> likes
 ) {
+        public PostModel.CreatePostPayload toCreatePostPayload() {
+                return PostModel.CreatePostPayload.builder()
+                        .id(id)
+                        .post(PostModel.Post.builder()
+                                .id(id)
+                                .firstName(userInfo.firstName())
+                                .lastName(userInfo.lastName())
+                                .photoUrl(photoUrls)
+                                .content(content)
+                                .build())
+                        .build();
+        }
 }
