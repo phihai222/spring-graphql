@@ -14,4 +14,11 @@ public class UserModel {
             String avatarUrl
 
     ) {}
+
+    @Builder
+    public record UpdateUserInput(
+            String firstName,
+            String lastName,
+            String avatarUrl
+    ) { }
 }

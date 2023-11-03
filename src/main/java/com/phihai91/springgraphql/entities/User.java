@@ -26,10 +26,6 @@ public record User(
 
         List<Role> roles
 ) {
-        public User {
-                active = true;
-        }
-
         public AuthModel.RegistrationUserPayload toGetRegistrationUserPayload(String userId) {
                 return AuthModel.RegistrationUserPayload.builder()
                         .id(userId)

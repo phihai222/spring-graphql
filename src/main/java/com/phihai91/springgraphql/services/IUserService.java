@@ -5,4 +5,5 @@ import reactor.core.publisher.Mono;
 
 public interface IUserService {
     Mono<UserModel.User> getCurrentUserInfo();
+    Mono<UserModel.User> updateUserInfo(UserModel.UpdateUserInput input);
 }

@@ -56,6 +56,7 @@ public class AuthService implements IAuthService {
                         .build())
                 .password(passwordEncoder.encode(input.password()))
                 .twoMF(false)
+                .active(true)
                 .roles(List.of(Role.ROLE_USER))
                 .build();
 
