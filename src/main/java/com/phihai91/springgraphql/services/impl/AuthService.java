@@ -61,7 +61,9 @@ public class AuthService implements IAuthService {
 
         log.info(newUser.toString());
 
-        return userRepository.existsUserByUsernameEqualsOrEmailEquals(input.usernameOrEmail(), input.usernameOrEmail())
+        return userRepository.existsUserByUsernameEqualsOrEmailEquals(
+                        input.usernameOrEmail().toLowerCase(),
+                        input.usernameOrEmail().toLowerCase())
                 .flatMap(exists -> (exists) ? Mono.error(new ConflictResourceException("Username or email existed"))
                         : userRepository.save(newUser))
                 .map(user -> user.toGetRegistrationUserPayload(user.id()));
