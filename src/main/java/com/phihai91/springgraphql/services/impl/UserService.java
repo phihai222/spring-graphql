@@ -44,21 +44,21 @@ public class UserService implements IUserService {
     public Mono<UserModel.User> updateUserInfo(UserModel.UpdateUserInput input) {
         return ReactiveSecurityContextHolder.getContext()
                 .map(securityContext -> (AppUserDetails) securityContext.getAuthentication().getPrincipal())
-                .flatMap(u -> userRepository.findById(u.getId()))
-                .flatMap(u -> (u.twoMF() && input.email() != null) ?
-                    Mono.error(new ForbiddenException("2MF must be deactivate to change email")) : Mono.just(u))
-                .flatMap(u -> userRepository.existsUserByEmailEquals(input.email())
+                .flatMap(u -> userRepository.findById(u.getId()))// Get user from database
+                .flatMap(u -> (u.twoMF() && input.email() != null) ? // Start validate 2MF is enable or not.
+                        Mono.error(new ForbiddenException("2MF must be deactivate to change email")) : Mono.just(u)) // If 2MF is enable, reject change email
+                .flatMap(u -> userRepository.existsUserByEmailEquals(input.email()) // Validate new email existed or not
                         .flatMap(existed -> (existed) ?
                                 Mono.error(new BadRequestException("Email existed")) : Mono.just(u)))
-                .map(user -> user
+                .map(user -> user // Clone object and modify data
                         .withEmail(input.email() != null ? input.email() : user.email())
                         .withUserInfo(user.userInfo()
-                            .withAvatarUrl(input.avatarUrl() != null ? input.avatarUrl() : user.userInfo().avatarUrl())
-                            .withLastName(input.lastName() != null ? input.lastName() : user.userInfo().lastName())
-                            .withFirstName(input.firstName() != null ? input.firstName() : user.userInfo().firstName())
-                ))
-                .flatMap(user -> userRepository.save(user))
-                .map(u -> UserModel.User.builder()
+                                .withAvatarUrl(input.avatarUrl() != null ? input.avatarUrl() : user.userInfo().avatarUrl())
+                                .withLastName(input.lastName() != null ? input.lastName() : user.userInfo().lastName())
+                                .withFirstName(input.firstName() != null ? input.firstName() : user.userInfo().firstName())
+                        ))
+                .flatMap(user -> userRepository.save(user)) // Save user data with same ID
+                .map(u -> UserModel.User.builder() // Map and return response
                         .id(u.id())
                         .username(u.username())
                         .email(u.email())
