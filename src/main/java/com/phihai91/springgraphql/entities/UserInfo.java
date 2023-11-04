@@ -1,10 +1,10 @@
 package com.phihai91.springgraphql.entities;
 
-import io.soabase.recordbuilder.core.RecordBuilder;
 import lombok.Builder;
+import lombok.With;
 
 @Builder
-@RecordBuilder
+@With
 public record UserInfo(
         String firstName,
         String lastName,

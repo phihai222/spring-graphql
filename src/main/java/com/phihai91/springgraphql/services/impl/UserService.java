@@ -1,7 +1,5 @@
 package com.phihai91.springgraphql.services.impl;
 
-import com.phihai91.springgraphql.entities.UserBuilder;
-import com.phihai91.springgraphql.entities.UserInfoBuilder;
 import com.phihai91.springgraphql.payloads.UserModel;
 import com.phihai91.springgraphql.repositories.IUserRepository;
 import com.phihai91.springgraphql.securities.AppUserDetails;
@@ -45,13 +43,10 @@ public class UserService implements IUserService {
         return ReactiveSecurityContextHolder.getContext()
                 .map(securityContext -> (AppUserDetails) securityContext.getAuthentication().getPrincipal())
                 .flatMap(u -> userRepository.findById(u.getId()))
-                .map(user -> UserBuilder.builder(user)
-                        .userInfo(UserInfoBuilder.builder(user.userInfo())
-                                .firstName(input.firstName())
-                                .lastName(input.lastName())
-                                .avatarUrl(input.avatarUrl())
-                                .build())
-                        .build())
+                .map(user -> user.withUserInfo(user.userInfo()
+                        .withAvatarUrl(input.avatarUrl() != null ? input.avatarUrl() : user.userInfo().avatarUrl())
+                        .withLastName(input.lastName() != null ? input.lastName() : user.userInfo().lastName())
+                        .withFirstName(input.firstName() != null ? input.firstName() : user.userInfo().firstName())))
                 .flatMap(user -> userRepository.save(user))
                 .map(u -> UserModel.User.builder()
                         .id(u.id())
