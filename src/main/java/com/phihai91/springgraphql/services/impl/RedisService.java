@@ -23,6 +23,17 @@ public class RedisService implements IRedisService {
     private ReactiveStringRedisTemplate redisTemplate;
 
     @Override
+    public Mono<Boolean> saveOtp(Boolean twoMF, String sentTo, String otp, String userId) {
+        AuthModel.LoginUserPayload loginUserPayload = AuthModel.LoginUserPayload.builder()
+                .twoMF(twoMF)
+                .userId(userId)
+                .otp(otp)
+                .sentTo(sentTo)
+                .build();
+        return saveOtp(loginUserPayload);
+    }
+
+    @Override
     public Mono<Boolean> saveOtp(AuthModel.LoginUserPayload loginUserPayload) {
         if (!loginUserPayload.twoMF())
             return Mono.just(false);

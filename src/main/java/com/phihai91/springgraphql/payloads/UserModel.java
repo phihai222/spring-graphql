@@ -24,4 +24,11 @@ public class UserModel {
             String email
     ) {
     }
+
+    @Builder
+    public record SetTwoMFPayload(
+            String userId,
+            String sentTo,
+            String otp
+    ) {}
 }

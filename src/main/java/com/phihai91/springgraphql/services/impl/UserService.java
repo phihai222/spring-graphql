@@ -1,10 +1,14 @@
 package com.phihai91.springgraphql.services.impl;
 
+import com.phihai91.springgraphql.entities.User;
 import com.phihai91.springgraphql.exceptions.BadRequestException;
 import com.phihai91.springgraphql.exceptions.ForbiddenException;
+import com.phihai91.springgraphql.payloads.AuthModel;
 import com.phihai91.springgraphql.payloads.UserModel;
 import com.phihai91.springgraphql.repositories.IUserRepository;
 import com.phihai91.springgraphql.securities.AppUserDetails;
+import com.phihai91.springgraphql.services.IAuthService;
+import com.phihai91.springgraphql.services.IRedisService;
 import com.phihai91.springgraphql.services.IUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +16,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.time.ZoneId;
 
@@ -20,6 +25,12 @@ import java.time.ZoneId;
 public class UserService implements IUserService {
     @Autowired
     private IUserRepository userRepository;
+
+    @Autowired
+    private IAuthService authService;
+
+    @Autowired
+    private IRedisService redisService;
 
     @Override
     @PreAuthorize("hasRole('USER')")
@@ -66,5 +77,30 @@ public class UserService implements IUserService {
                         .firstName(u.userInfo().firstName())
                         .lastName(u.userInfo().lastName())
                         .build());
+    }
+
+    @Override
+    @PreAuthorize("hasRole('USER')")
+    public Mono<UserModel.SetTwoMFPayload> setTwoMF() {
+        return ReactiveSecurityContextHolder.getContext()
+                .map(securityContext -> (AppUserDetails) securityContext.getAuthentication().getPrincipal())
+                .flatMap(appUserDetails -> userRepository.findById(appUserDetails.getId()))
+                .map(User::toAppUserDetails)
+                .map(appUserDetails -> {
+                    appUserDetails.setTwoMF(true); // Set to pass get OTP
+                    AuthModel.LoginUserPayload otp = authService.getOtp(appUserDetails);
+                    return UserModel.SetTwoMFPayload.builder()
+                            .userId(appUserDetails.getId())
+                            .otp(otp.otp())
+                            .sentTo(otp.sentTo())
+                            .build();
+                })
+                .publishOn(Schedulers.boundedElastic())
+                .doOnNext(setTwoMFPayload -> redisService.saveOtp(
+                                true,
+                                setTwoMFPayload.sentTo(),
+                                setTwoMFPayload.otp(),
+                                setTwoMFPayload.userId())
+                        .subscribe());
     }
 }

@@ -15,6 +15,13 @@ type Mutation {
     addFriend(input: AddFriendInput!) : AddFriendPayload
     acceptOrRejectFriend(input: AcceptOrRejectFriendInput!): AcceptOrRejectFriendPayload
     updateUserInfo(input: UpdateUserInput): User
+    setTwoMF: SetTwoMFPayload
+}
+
+type SetTwoMFPayload {
+    userId: String!
+    sentTo: String!
+    otp: String!
 }
 
 input UpdateUserInput {

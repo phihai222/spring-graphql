@@ -25,4 +25,9 @@ public class UserController {
     public Mono<UserModel.User> updateUserInfo(@Argument UserModel.UpdateUserInput input) {
         return userService.updateUserInfo(input);
     }
+
+    @MutationMapping
+    public Mono<UserModel.SetTwoMFPayload> setTwoMF() {
+        return userService.setTwoMF();
+    }
 }
