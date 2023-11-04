@@ -1,5 +1,6 @@
 package com.phihai91.springgraphql.services.impl;
 
+import com.phihai91.springgraphql.exceptions.BadRequestException;
 import com.phihai91.springgraphql.exceptions.ForbiddenException;
 import com.phihai91.springgraphql.payloads.UserModel;
 import com.phihai91.springgraphql.repositories.IUserRepository;
@@ -46,7 +47,9 @@ public class UserService implements IUserService {
                 .flatMap(u -> userRepository.findById(u.getId()))
                 .flatMap(u -> (u.twoMF() && input.email() != null) ?
                     Mono.error(new ForbiddenException("2MF must be deactivate to change email")) : Mono.just(u))
-                //TODO validate email
+                .flatMap(u -> userRepository.existsUserByEmailEquals(input.email())
+                        .flatMap(existed -> (existed) ?
+                                Mono.error(new BadRequestException("Email existed")) : Mono.just(u)))
                 .map(user -> user
                         .withEmail(input.email() != null ? input.email() : user.email())
                         .withUserInfo(user.userInfo()
