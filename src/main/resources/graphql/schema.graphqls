@@ -21,6 +21,7 @@ input UpdateUserInput {
     firstName: String
     lastName: String
     avatarUrl: String
+    email: String @Pattern(regexp: "^\\S+@\\S+\\.\\S+$", message: "Email invalid format")
 }
 
 #Model

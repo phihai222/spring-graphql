@@ -13,12 +13,15 @@ public class UserModel {
             Long registrationDate,
             String avatarUrl
 
-    ) {}
+    ) {
+    }
 
     @Builder
     public record UpdateUserInput(
             String firstName,
             String lastName,
-            String avatarUrl
-    ) { }
+            String avatarUrl,
+            String email
+    ) {
+    }
 }

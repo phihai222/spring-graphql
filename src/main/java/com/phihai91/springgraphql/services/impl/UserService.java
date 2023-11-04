@@ -1,5 +1,6 @@
 package com.phihai91.springgraphql.services.impl;
 
+import com.phihai91.springgraphql.exceptions.ForbiddenException;
 import com.phihai91.springgraphql.payloads.UserModel;
 import com.phihai91.springgraphql.repositories.IUserRepository;
 import com.phihai91.springgraphql.securities.AppUserDetails;
@@ -43,10 +44,16 @@ public class UserService implements IUserService {
         return ReactiveSecurityContextHolder.getContext()
                 .map(securityContext -> (AppUserDetails) securityContext.getAuthentication().getPrincipal())
                 .flatMap(u -> userRepository.findById(u.getId()))
-                .map(user -> user.withUserInfo(user.userInfo()
-                        .withAvatarUrl(input.avatarUrl() != null ? input.avatarUrl() : user.userInfo().avatarUrl())
-                        .withLastName(input.lastName() != null ? input.lastName() : user.userInfo().lastName())
-                        .withFirstName(input.firstName() != null ? input.firstName() : user.userInfo().firstName())))
+                .flatMap(u -> (u.twoMF() && input.email() != null) ?
+                    Mono.error(new ForbiddenException("2MF must be deactivate to change email")) : Mono.just(u))
+                //TODO validate email
+                .map(user -> user
+                        .withEmail(input.email() != null ? input.email() : user.email())
+                        .withUserInfo(user.userInfo()
+                            .withAvatarUrl(input.avatarUrl() != null ? input.avatarUrl() : user.userInfo().avatarUrl())
+                            .withLastName(input.lastName() != null ? input.lastName() : user.userInfo().lastName())
+                            .withFirstName(input.firstName() != null ? input.firstName() : user.userInfo().firstName())
+                ))
                 .flatMap(user -> userRepository.save(user))
                 .map(u -> UserModel.User.builder()
                         .id(u.id())
