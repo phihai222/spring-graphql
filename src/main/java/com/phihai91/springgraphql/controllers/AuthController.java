@@ -35,7 +35,7 @@ public class AuthController {
 
     @SchemaMapping(typeName = "LoginUserPayload", field = "credentials")
     Mono<AuthModel.VerifyOtpPayload> credentials(AuthModel.LoginUserPayload loginUserPayload) {
-        if (loginUserPayload.twoMF()) return null;
+        if (loginUserPayload.twoMFA()) return null;
         return userService.getToken(loginUserPayload.userId());
     }
 

@@ -37,7 +37,7 @@ public class SecurityConfig {
                 .map(u -> AppUserDetails
                         .builder()
                         .id(u.id())
-                        .twoMF(u.twoMF())
+                        .twoMFA(u.twoMFA())
                         .username(u.username())
                         .email(u.email())
                         .authorities(u.roles()

@@ -3,7 +3,6 @@ package com.phihai91.springgraphql.services.impl;
 import com.phihai91.springgraphql.entities.User;
 import com.phihai91.springgraphql.exceptions.BadRequestException;
 import com.phihai91.springgraphql.exceptions.ForbiddenException;
-import com.phihai91.springgraphql.payloads.AuthModel;
 import com.phihai91.springgraphql.payloads.UserModel;
 import com.phihai91.springgraphql.repositories.IUserRepository;
 import com.phihai91.springgraphql.securities.AppUserDetails;
@@ -56,8 +55,8 @@ public class UserService implements IUserService {
         return ReactiveSecurityContextHolder.getContext()
                 .map(securityContext -> (AppUserDetails) securityContext.getAuthentication().getPrincipal())
                 .flatMap(u -> userRepository.findById(u.getId()))// Get user from database
-                .flatMap(u -> (u.twoMF() && input.email() != null) ? // Start validate 2MF is enable or not.
-                        Mono.error(new ForbiddenException("2MF must be deactivate to change email")) : Mono.just(u)) // If 2MF is enable, reject change email
+                .flatMap(u -> (u.twoMFA() && input.email() != null) ? // Start validate 2MF is enable or not.
+                        Mono.error(new ForbiddenException("2MFA must be deactivate to change email")) : Mono.just(u)) // If 2MF is enable, reject change email
                 .flatMap(u -> userRepository.existsUserByEmailEquals(input.email()) // Validate new email existed or not
                         .flatMap(existed -> (existed) ?
                                 Mono.error(new BadRequestException("Email existed")) : Mono.just(u)))
@@ -81,26 +80,21 @@ public class UserService implements IUserService {
 
     @Override
     @PreAuthorize("hasRole('USER')")
-    public Mono<UserModel.SetTwoMFPayload> setTwoMF() {
+    public Mono<UserModel.SetTwoMFAPayload> setTwoMF() {
         return ReactiveSecurityContextHolder.getContext()
                 .map(securityContext -> (AppUserDetails) securityContext.getAuthentication().getPrincipal())
                 .flatMap(appUserDetails -> userRepository.findById(appUserDetails.getId()))
                 .map(User::toAppUserDetails)
-                .map(appUserDetails -> {
-                    appUserDetails.setTwoMF(true); // Set to pass get OTP
-                    AuthModel.LoginUserPayload otp = authService.getOtp(appUserDetails);
-                    return UserModel.SetTwoMFPayload.builder()
-                            .userId(appUserDetails.getId())
-                            .otp(otp.otp())
-                            .sentTo(otp.sentTo())
-                            .build();
-                })
+                .map(appUserDetails -> UserModel.SetTwoMFAPayload.builder()
+                        .userId(appUserDetails.getId())
+                        .otp(authService.getOtp(appUserDetails))
+                        .sentTo(appUserDetails.getEmail())
+                        .build())
                 .publishOn(Schedulers.boundedElastic())
-                .doOnNext(setTwoMFPayload -> redisService.saveOtp(
-                                true,
-                                setTwoMFPayload.sentTo(),
-                                setTwoMFPayload.otp(),
-                                setTwoMFPayload.userId())
+                .doOnNext(setTwoMFAPayload -> redisService.saveOtp(
+                                setTwoMFAPayload.userId(),
+                                setTwoMFAPayload.sentTo(),
+                                setTwoMFAPayload.otp())
                         .subscribe());
     }
 }

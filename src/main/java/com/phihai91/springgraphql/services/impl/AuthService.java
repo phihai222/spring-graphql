@@ -55,7 +55,7 @@ public class AuthService implements IAuthService {
                         .lastName("")
                         .build())
                 .password(passwordEncoder.encode(input.password()))
-                .twoMF(false)
+                .twoMFA(false)
                 .active(true)
                 .roles(List.of(Role.ROLE_USER))
                 .build();
@@ -85,22 +85,24 @@ public class AuthService implements IAuthService {
                         .onErrorMap(error -> new BadRequestException(error.getMessage()))
                         .map(authentication -> {
                             AppUserDetails appUser = (AppUserDetails) authentication.getPrincipal();
-                            return getOtp(appUser);
+                            return AuthModel.LoginUserPayload.builder()
+                                    .userId(appUser.getId())
+                                    .twoMFA(appUser.getTwoMFA())
+                                    .sentTo(appUser.getTwoMFA() ? appUser.getEmail() : null)
+                                    .otp(appUser.getTwoMFA() ? getOtp(appUser) : null)
+                                    .build();
                         }))
                 .publishOn(Schedulers.boundedElastic())
-                .doOnNext(loginUserPayload -> redisService.saveOtp(loginUserPayload).subscribe());
+                .doOnNext(loginUserPayload -> {
+                    if (loginUserPayload.twoMFA())
+                        redisService.saveOtp(loginUserPayload.userId(), loginUserPayload.sentTo(), loginUserPayload.otp())
+                                .subscribe();
+                });
     }
 
     @Override
-    public AuthModel.LoginUserPayload getOtp(AppUserDetails appUser) {
-        String otp = new DecimalFormat("000000").format(new Random().nextInt(999999));
-
-        return AuthModel.LoginUserPayload.builder()
-                .userId(appUser.getId())
-                .twoMF(appUser.getTwoMF())
-                .sentTo(appUser.getTwoMF() ? appUser.getEmail() : null)
-                .otp(appUser.getTwoMF() ? otp : null)
-                .build();
+    public String getOtp(AppUserDetails appUser) {
+        return new DecimalFormat("000000").format(new Random().nextInt(999999));
     }
 
     @Override

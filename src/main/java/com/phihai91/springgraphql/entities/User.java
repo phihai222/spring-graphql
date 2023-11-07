@@ -20,7 +20,7 @@ public record User(
         @Id String id,
         String username,
         String email,
-        Boolean twoMF,
+        Boolean twoMFA,
         String password,
         @CreatedDate
         LocalDateTime registrationDate,
@@ -40,7 +40,7 @@ public record User(
         return AppUserDetails.builder()
                 .id(id)
                 .email(email)
-                .twoMF(twoMF)
+                .twoMFA(twoMFA)
                 .username(username)
                 .authorities(roles().stream()
                         .map(role -> new SimpleGrantedAuthority(role.name()))

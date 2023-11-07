@@ -136,7 +136,7 @@ input VerifyOtpInput {
 
 type LoginUserPayload {
     userId: ID!
-    twoMF: Boolean!,
+    twoMFA: Boolean!,
     sentTo: String
     otp: String
     credentials: VerifyOtpPayload

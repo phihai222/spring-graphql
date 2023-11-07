@@ -4,9 +4,7 @@ import com.phihai91.springgraphql.payloads.AuthModel;
 import reactor.core.publisher.Mono;
 
 public interface IRedisService {
-    Mono<Boolean> saveOtp(Boolean twoMF, String sentTo, String otp, String userId);
-
-    Mono<Boolean> saveOtp(AuthModel.LoginUserPayload loginUserPayload);
+    Mono<Boolean> saveOtp(String userId, String sentTo, String otp);
 
     Mono<Object> getOtp(AuthModel.VerifyOtpInput input);
 

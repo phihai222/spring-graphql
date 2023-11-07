@@ -8,6 +8,6 @@ public interface IAuthService {
     Mono<AuthModel.RegistrationUserPayload> registrationUser(AuthModel.RegistrationUserInput input);
     Mono<AuthModel.VerifyOtpPayload> getToken(String userId);
     Mono<AuthModel.LoginUserPayload> login(AuthModel.LoginUserInput input);
-    AuthModel.LoginUserPayload getOtp(AppUserDetails appUser);
+    String getOtp(AppUserDetails appUser);
     Mono<AuthModel.VerifyOtpPayload> verifyOtp(AuthModel.VerifyOtpInput input);
 }

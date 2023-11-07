@@ -37,7 +37,7 @@ public class AuthModel {
             String userId,
             String sentTo,
             String otp,
-            Boolean twoMF,
+            Boolean twoMFA,
             VerifyOtpPayload credentials
     ) {
     }

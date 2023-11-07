@@ -27,7 +27,7 @@ public class UserController {
     }
 
     @MutationMapping
-    public Mono<UserModel.SetTwoMFPayload> setTwoMF() {
+    public Mono<UserModel.SetTwoMFAPayload> setTwoMF() {
         return userService.setTwoMF();
     }
 }

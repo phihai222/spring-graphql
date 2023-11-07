@@ -26,7 +26,7 @@ public class UserModel {
     }
 
     @Builder
-    public record SetTwoMFPayload(
+    public record SetTwoMFAPayload(
             String userId,
             String sentTo,
             String otp
