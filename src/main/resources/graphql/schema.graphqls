@@ -14,9 +14,9 @@ type Mutation {
     commentPost(input: CommentPostInput!) : Comment
     addFriend(input: AddFriendInput!) : AddFriendPayload
     acceptOrRejectFriend(input: AcceptOrRejectFriendInput!): AcceptOrRejectFriendPayload
-    updateUserInfo(input: UpdateUserInput): User
+    updateUserInfo(input: UpdateUserInput!): User
     setTwoMF: SetTwoMFPayload
-    verifyTwoMFOtp(input: VerifyOtpInput!): CommonPayload
+    verifyTwoMFOtp(input: String! @Size(min: 6, max: 6)): CommonPayload
 }
 
 type CommonPayload {
