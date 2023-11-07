@@ -16,6 +16,17 @@ type Mutation {
     acceptOrRejectFriend(input: AcceptOrRejectFriendInput!): AcceptOrRejectFriendPayload
     updateUserInfo(input: UpdateUserInput): User
     setTwoMF: SetTwoMFPayload
+    verifyTwoMFOtp(input: VerifyOtpInput!): CommonPayload
+}
+
+type CommonPayload {
+    status: CommonStatus!
+    message: String!
+}
+
+enum CommonStatus {
+    SUCCESS,
+    FAILED
 }
 
 type SetTwoMFPayload {

@@ -15,32 +15,32 @@ import reactor.core.publisher.Mono;
 public class AuthController {
 
     @Autowired
-    private IAuthService userService;
+    private IAuthService authService;
 
     @MutationMapping
     Mono<AuthModel.RegistrationUserPayload> registrationUser(@Argument AuthModel.RegistrationUserInput input) {
-        return userService.registrationUser(input);
+        return authService.registrationUser(input);
     }
 
     @SchemaMapping(typeName = "RegistrationUserPayload", field = "credentials")
     Mono<AuthModel.VerifyOtpPayload> credentials(AuthModel.RegistrationUserPayload registrationUserPayload) {
-        return userService.getToken(registrationUserPayload.id());
+        return authService.getToken(registrationUserPayload.id());
     }
 
 
     @MutationMapping
     Mono<AuthModel.LoginUserPayload> loginUser(@Argument AuthModel.LoginUserInput input) {
-        return userService.login(input);
+        return authService.login(input);
     }
 
     @SchemaMapping(typeName = "LoginUserPayload", field = "credentials")
     Mono<AuthModel.VerifyOtpPayload> credentials(AuthModel.LoginUserPayload loginUserPayload) {
         if (loginUserPayload.twoMFA()) return null;
-        return userService.getToken(loginUserPayload.userId());
+        return authService.getToken(loginUserPayload.userId());
     }
 
     @MutationMapping
     Mono<AuthModel.VerifyOtpPayload> verifyOtp(@Argument AuthModel.VerifyOtpInput input) {
-        return userService.verifyOtp(input);
+        return authService.verifyOtp(input);
     }
 }

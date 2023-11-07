@@ -1,5 +1,7 @@
 package com.phihai91.springgraphql.controllers;
 
+import com.phihai91.springgraphql.payloads.AuthModel;
+import com.phihai91.springgraphql.payloads.CommonModel;
 import com.phihai91.springgraphql.payloads.UserModel;
 import com.phihai91.springgraphql.services.IUserService;
 import lombok.extern.slf4j.Slf4j;
@@ -29,5 +31,10 @@ public class UserController {
     @MutationMapping
     public Mono<UserModel.SetTwoMFAPayload> setTwoMF() {
         return userService.setTwoMF();
+    }
+
+    @MutationMapping
+    public Mono<CommonModel.CommonPayload> verifyTwoMFOtp(@Argument AuthModel.VerifyOtpInput input) {
+        return userService.verifyTwoMFOtp(input);
     }
 }

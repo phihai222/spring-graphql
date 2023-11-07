@@ -3,6 +3,8 @@ package com.phihai91.springgraphql.services.impl;
 import com.phihai91.springgraphql.entities.User;
 import com.phihai91.springgraphql.exceptions.BadRequestException;
 import com.phihai91.springgraphql.exceptions.ForbiddenException;
+import com.phihai91.springgraphql.payloads.AuthModel;
+import com.phihai91.springgraphql.payloads.CommonModel;
 import com.phihai91.springgraphql.payloads.UserModel;
 import com.phihai91.springgraphql.repositories.IUserRepository;
 import com.phihai91.springgraphql.securities.AppUserDetails;
@@ -96,5 +98,13 @@ public class UserService implements IUserService {
                                 setTwoMFAPayload.sentTo(),
                                 setTwoMFAPayload.otp())
                         .subscribe());
+    }
+
+    @Override
+    public Mono<CommonModel.CommonPayload> verifyTwoMFOtp(AuthModel.VerifyOtpInput input) {
+        return Mono.just(CommonModel.CommonPayload.builder()
+                .status(CommonModel.CommonStatus.SUCCESS)
+                .message("Test")
+                .build());
     }
 }
