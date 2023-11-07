@@ -108,7 +108,7 @@ public class AuthService implements IAuthService {
     @Override
     public Mono<AuthModel.VerifyOtpPayload> verifyOtp(AuthModel.VerifyOtpInput input) {
         return Mono.just(input)
-                .flatMap(verifyOtpInput -> redisService.getOtp(input))
+                .flatMap(verifyOtpInput -> redisService.getOtp(input.userId()))
                 .flatMap(o -> o.equals(input.otp()) ? getToken(input.userId())
                         : Mono.error(new BadRequestException("Invalid OTP")))
                 .publishOn(Schedulers.boundedElastic()) //Fire and forget

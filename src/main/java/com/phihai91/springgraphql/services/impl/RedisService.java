@@ -1,7 +1,6 @@
 package com.phihai91.springgraphql.services.impl;
 
 import com.phihai91.springgraphql.exceptions.BadRequestException;
-import com.phihai91.springgraphql.payloads.AuthModel;
 import com.phihai91.springgraphql.services.IRedisService;
 import com.phihai91.springgraphql.ultis.Constants;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,9 +35,10 @@ public class RedisService implements IRedisService {
     }
 
     @Override
-    public Mono<Object> getOtp(AuthModel.VerifyOtpInput input) {
-        return redisTemplate.hasKey(Constants.REDIS_OTP_PREFIX + input.userId())
-                        .flatMap(aBoolean -> aBoolean ? redisTemplate.opsForHash().get(Constants.REDIS_OTP_PREFIX + input.userId(), Constants.REDIS_KEY_OTP)
+    public Mono<Object> getOtp(String userId) {
+        return redisTemplate.hasKey(Constants.REDIS_OTP_PREFIX + userId)
+                        .flatMap(aBoolean -> aBoolean ?
+                                redisTemplate.opsForHash().get(Constants.REDIS_OTP_PREFIX + userId, Constants.REDIS_KEY_OTP)
                                 : Mono.error(new BadRequestException("Invalid OTP")));
     }
 
