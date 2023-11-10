@@ -85,7 +85,8 @@ public class UserService implements IUserService {
         return ReactiveSecurityContextHolder.getContext()
                 .map(securityContext -> (AppUserDetails) securityContext.getAuthentication().getPrincipal())
                 .flatMap(appUserDetails -> userRepository.findById(appUserDetails.getId()))
-                //TODO check user set email or not
+                .flatMap(user -> user.email() == null ?
+                        Mono.error(new ForbiddenException("Email must be set before active 2MFA")) : Mono.just(user))
                 .map(User::toAppUserDetails)
                 .map(appUserDetails -> UserModel.SetTwoMFAPayload.builder()
                         .userId(appUserDetails.getId())
