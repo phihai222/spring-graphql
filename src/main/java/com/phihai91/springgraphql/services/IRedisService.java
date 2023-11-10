@@ -8,4 +8,6 @@ public interface IRedisService {
     Mono<Object> getOtp(String userId);
 
     Mono<Boolean> removeOTP(String userId);
+
+    Mono<Boolean> verifyOtp(String userId, String otp);
 }

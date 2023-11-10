@@ -7,6 +7,6 @@ import reactor.core.publisher.Mono;
 public interface IUserService {
     Mono<UserModel.User> getCurrentUserInfo();
     Mono<UserModel.User> updateUserInfo(UserModel.UpdateUserInput input);
-    Mono<UserModel.SetTwoMFAPayload> setTwoMF();
+    Mono<UserModel.SetTwoMFAPayload> setTwoMFA();
     Mono<CommonModel.CommonPayload> verifyTwoMFOtp(String otp);
 }

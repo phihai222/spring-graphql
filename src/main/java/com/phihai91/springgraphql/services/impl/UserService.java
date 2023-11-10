@@ -81,10 +81,11 @@ public class UserService implements IUserService {
 
     @Override
     @PreAuthorize("hasRole('USER')")
-    public Mono<UserModel.SetTwoMFAPayload> setTwoMF() {
+    public Mono<UserModel.SetTwoMFAPayload> setTwoMFA() {
         return ReactiveSecurityContextHolder.getContext()
                 .map(securityContext -> (AppUserDetails) securityContext.getAuthentication().getPrincipal())
                 .flatMap(appUserDetails -> userRepository.findById(appUserDetails.getId()))
+                //TODO check user set email or not
                 .map(User::toAppUserDetails)
                 .map(appUserDetails -> UserModel.SetTwoMFAPayload.builder()
                         .userId(appUserDetails.getId())
@@ -100,11 +101,20 @@ public class UserService implements IUserService {
     }
 
     @Override
+    @PreAuthorize("hasRole('USER')")
     public Mono<CommonModel.CommonPayload> verifyTwoMFOtp(String otp) {
-        //TODO Get current user, check otp, get user data, check email, save 2MF
-        return Mono.just(CommonModel.CommonPayload.builder()
-                .status(CommonModel.CommonStatus.SUCCESS)
-                .message("Test::" + otp)
-                .build());
+        return ReactiveSecurityContextHolder.getContext()
+                .map(securityContext -> (AppUserDetails) securityContext.getAuthentication().getPrincipal())
+                .flatMap(userDetails -> redisService.verifyOtp(userDetails.getId(), otp)
+                        .flatMap(aBoolean -> aBoolean ? Mono.just(userDetails) : Mono.error(new BadRequestException("Invalid OTP"))))
+                .flatMap(appUserDetails -> userRepository.findById(appUserDetails.getId()) //Get User from db
+                        .map(user -> user.withTwoMFA(!user.twoMFA())))
+                .publishOn(Schedulers.parallel())
+                .flatMap(user -> userRepository.save(user))
+                .flatMap(user -> redisService.removeOTP(user.id()))//Update user
+                .map(commonPayload -> CommonModel.CommonPayload.builder()
+                        .message("Success")
+                        .status(CommonModel.CommonStatus.SUCCESS)
+                        .build());
     }
 }

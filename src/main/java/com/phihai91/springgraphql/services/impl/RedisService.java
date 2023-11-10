@@ -37,13 +37,19 @@ public class RedisService implements IRedisService {
     @Override
     public Mono<Object> getOtp(String userId) {
         return redisTemplate.hasKey(Constants.REDIS_OTP_PREFIX + userId)
-                        .flatMap(aBoolean -> aBoolean ?
-                                redisTemplate.opsForHash().get(Constants.REDIS_OTP_PREFIX + userId, Constants.REDIS_KEY_OTP)
-                                : Mono.error(new BadRequestException("Invalid OTP")));
+                .flatMap(aBoolean -> aBoolean ?
+                        redisTemplate.opsForHash().get(Constants.REDIS_OTP_PREFIX + userId, Constants.REDIS_KEY_OTP)
+                        : Mono.error(new BadRequestException("Invalid OTP")));
     }
 
     @Override
     public Mono<Boolean> removeOTP(String userId) {
         return redisTemplate.opsForHash().delete(Constants.REDIS_OTP_PREFIX + userId);
+    }
+
+    @Override
+    public Mono<Boolean> verifyOtp(String userId, String otp) {
+        return getOtp(userId)
+                .map(o -> o.equals(otp));
     }
 }

@@ -29,7 +29,7 @@ public class UserController {
 
     @MutationMapping
     public Mono<UserModel.SetTwoMFAPayload> setTwoMF() {
-        return userService.setTwoMF();
+        return userService.setTwoMFA();
     }
 
     @MutationMapping
