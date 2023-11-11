@@ -46,13 +46,10 @@ public class PostService implements IPostService {
     @Override
     @PreAuthorize("hasRole('USER')")
     public Flux<PostModel.CreatePostPayload> getMyPosts() {
-        return Flux.just(
-                PostModel.CreatePostPayload.builder()
-                        .id("Post1")
-                        .build(),
-                PostModel.CreatePostPayload.builder()
-                        .id("Post2")
-                        .build()
-        );
+        return ReactiveSecurityContextHolder.getContext()
+                .map(securityContext -> (AppUserDetails) securityContext.getAuthentication().getPrincipal())
+                .flatMap(appUserDetails -> postRepository.findAllByUserIdEquals(appUserDetails.getId()).collectList())
+                .flatMapMany(Flux::fromIterable)
+                .map(Post::toCreatePostPayload);
     }
 }
