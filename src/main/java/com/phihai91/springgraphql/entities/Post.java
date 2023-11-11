@@ -30,12 +30,14 @@ public record Post(
         public PostModel.CreatePostPayload toCreatePostPayload() {
                 return PostModel.CreatePostPayload.builder()
                         .id(id)
+                        .visibility(visibility)
                         .post(PostModel.Post.builder()
                                 .id(id)
                                 .firstName(userInfo.firstName())
                                 .lastName(userInfo.lastName())
                                 .photoUrl(photoUrls)
                                 .content(content)
+                                .visibility(visibility)
                                 .build())
                         .build();
         }

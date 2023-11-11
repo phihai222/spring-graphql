@@ -116,11 +116,19 @@ input LikePostInput {
 type CreatePostPayload {
     id: ID!,
     post: Post,
+    visibility: Visibility
 }
 
 input CreatePostInput {
     content: String @Size(min: 3, max: 255)
     photoUrls: [String]
+    visibility: Visibility
+}
+
+enum Visibility {
+    PUBLIC,
+    PRIVATE,
+    FRIEND_ONLY
 }
 
 #Auth
