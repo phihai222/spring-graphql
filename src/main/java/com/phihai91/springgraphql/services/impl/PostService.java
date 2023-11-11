@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
@@ -40,5 +41,18 @@ public class PostService implements IPostService {
                     return postRepository.save(newPost);
                 })
                 .map(Post::toCreatePostPayload);
+    }
+
+    @Override
+    @PreAuthorize("hasRole('USER')")
+    public Flux<PostModel.CreatePostPayload> getMyPosts() {
+        return Flux.just(
+                PostModel.CreatePostPayload.builder()
+                        .id("Post1")
+                        .build(),
+                PostModel.CreatePostPayload.builder()
+                        .id("Post2")
+                        .build()
+        );
     }
 }
