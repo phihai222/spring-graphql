@@ -10,4 +10,5 @@ public interface IUserRepository extends ReactiveMongoRepository<User, String> {
     Mono<Boolean> existsUserByUsernameEqualsOrEmailEquals(String username, String email);
     Mono<User> findByUsernameEqualsOrEmailEquals(String username, String email);
     Mono<Boolean> existsUserByEmailEquals(String email);
+    Mono<Boolean> existsUserByUsernameEquals(String username);
 }

@@ -40,6 +40,7 @@ public class UserService implements IUserService {
                 .flatMap(appUserDetails -> userRepository.findById(appUserDetails.getId()))
                 .map(user -> UserModel.User.builder()
                         .id(user.id())
+                        .username(user.username())
                         .email(user.email())
                         .firstName(user.userInfo() != null ? user.userInfo().firstName() : null)
                         .lastName(user.userInfo() != null ? user.userInfo().lastName() : null)
@@ -61,8 +62,12 @@ public class UserService implements IUserService {
                 .flatMap(u -> userRepository.existsUserByEmailEquals(input.email()) // Validate new email existed or not
                         .flatMap(existed -> (existed) ?
                                 Mono.error(new BadRequestException("Email existed")) : Mono.just(u)))
+                .flatMap(u -> userRepository.existsUserByUsernameEquals(input.username())
+                        .flatMap(existed -> (existed) ?
+                                Mono.error(new BadRequestException("Username existed")) : Mono.just(u)))
                 .map(user -> user // Clone object and modify data
                         .withEmail(input.email() != null ? input.email() : user.email())
+                        .withUsername(input.username() != null ? input.username(): user.username())
                         .withUserInfo(user.userInfo()
                                 .withAvatarUrl(input.avatarUrl() != null ? input.avatarUrl() : user.userInfo().avatarUrl())
                                 .withLastName(input.lastName() != null ? input.lastName() : user.userInfo().lastName())
@@ -76,6 +81,7 @@ public class UserService implements IUserService {
                         .avatarUrl(u.userInfo().avatarUrl())
                         .firstName(u.userInfo().firstName())
                         .lastName(u.userInfo().lastName())
+                        .registrationDate(u.registrationDate().atZone(ZoneId.systemDefault()).toEpochSecond())
                         .build());
     }
 

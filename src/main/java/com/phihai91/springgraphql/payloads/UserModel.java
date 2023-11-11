@@ -18,6 +18,7 @@ public class UserModel {
 
     @Builder
     public record UpdateUserInput(
+            String username,
             String firstName,
             String lastName,
             String avatarUrl,
