@@ -57,6 +57,15 @@ public class SecurityConfig {
                         .pathMatchers("/graphiql").permitAll()
                         .pathMatchers("/graphql").permitAll()
                         .pathMatchers("/actuator/**").permitAll()
+                        .pathMatchers("/public/**").permitAll()
+                        .pathMatchers(
+                                "/v3/api-docs/**",
+                                "/configuration/ui",
+                                "/swagger-resources/**",
+                                "/configuration/security",
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/webjars/**").permitAll()
                         .anyExchange().authenticated())
                 .httpBasic(withDefaults())
                 .build();
