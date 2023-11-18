@@ -4,6 +4,7 @@ import com.phihai91.springgraphql.repositories.IUserRepository;
 import com.phihai91.springgraphql.securities.AppUserDetails;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.ReactiveAuthenticationManager;
 import org.springframework.security.authentication.UserDetailsRepositoryReactiveAuthenticationManager;
 import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
@@ -14,10 +15,9 @@ import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.web.server.authentication.HttpStatusServerEntryPoint;
 
 import java.util.stream.Collectors;
-
-import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
 @EnableWebFluxSecurity
@@ -52,6 +52,7 @@ public class SecurityConfig {
     @Bean
     SecurityWebFilterChain springWebFilterChain(ServerHttpSecurity http) {
         return http
+                .httpBasic().authenticationEntryPoint(new HttpStatusServerEntryPoint(HttpStatus.UNAUTHORIZED)).and()
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(requests -> requests
                         .pathMatchers("/graphiql").permitAll()
@@ -67,7 +68,6 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/webjars/**").permitAll()
                         .anyExchange().authenticated())
-                .httpBasic(withDefaults())
                 .build();
     }
 

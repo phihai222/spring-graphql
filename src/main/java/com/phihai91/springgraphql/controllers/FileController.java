@@ -19,7 +19,7 @@ import java.util.stream.Stream;
 
 
 @RestController
-@RequestMapping("/public/api/v1/files")
+@RequestMapping("/api/v1/files")
 public class FileController {
 
     @Autowired
