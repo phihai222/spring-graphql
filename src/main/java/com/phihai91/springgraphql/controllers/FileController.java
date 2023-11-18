@@ -25,10 +25,16 @@ public class FileController {
     @Autowired
     private IFileStorageService storageService;
 
-    @PostMapping(value = "/upload", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    @PostMapping(value = "/upload-single", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public Mono<ResponseEntity<ResponseMessage>> uploadFile(@RequestPart("file") Mono<FilePart> filePartMono) {
         return storageService.save(filePartMono).map(
                 (filename) -> ResponseEntity.ok().body(new ResponseMessage("Uploaded the file successfully: " + filename)));
+    }
+
+    @PostMapping(value = "/upload-multi", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity<Flux<ResponseMessage>> uploadFile(@RequestPart("file") Flux<FilePart> filePartMono) {
+        var res = Flux.just(new ResponseMessage("ok"));
+        return ResponseEntity.status(HttpStatus.OK).body(res);
     }
 
     @GetMapping("/files")
