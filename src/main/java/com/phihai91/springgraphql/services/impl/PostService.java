@@ -34,7 +34,7 @@ public class PostService implements IPostService {
                     Post newPost = Post.builder()
                             .content(input.content())
                             .userId(user.id())
-                            .photoUrls(input.photoUrls().isEmpty() ? null : input.photoUrls()) //TODO Check photo null or empty string
+                            .photoUrls(input.photoUrls())
                             .visibility(input.visibility() == null ? Visibility.PUBLIC : input.visibility())
                             .userInfo(user.userInfo())
                             .build();

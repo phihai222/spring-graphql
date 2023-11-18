@@ -121,7 +121,7 @@ type CreatePostPayload {
 
 input CreatePostInput {
     content: String @Size(min: 3, max: 255)
-    photoUrls: [String]
+    photoUrls: [String] @NotEmpty
     visibility: Visibility
 }
 
@@ -171,4 +171,7 @@ directive @Size(min : Int = 0, max : Int = 2147483647, message : String = "graph
 on ARGUMENT_DEFINITION | INPUT_FIELD_DEFINITION
 
 directive @Pattern(regexp : String! =".*", message : String = "graphql.validation.Pattern.message")
+on ARGUMENT_DEFINITION | INPUT_FIELD_DEFINITION
+
+directive @NotEmpty(message : String = "graphql.validation.NotEmpty.message")
 on ARGUMENT_DEFINITION | INPUT_FIELD_DEFINITION
