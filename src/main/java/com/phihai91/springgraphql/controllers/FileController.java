@@ -3,6 +3,7 @@ package com.phihai91.springgraphql.controllers;
 import com.phihai91.springgraphql.payloads.FileInfoDTO;
 import com.phihai91.springgraphql.payloads.ResponseMessage;
 import com.phihai91.springgraphql.services.IFileStorageService;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpHeaders;
@@ -15,11 +16,10 @@ import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.stream.Stream;
-
 
 @RestController
 @RequestMapping("/api/v1/files")
+@SecurityRequirement(name = "bearerAuth")
 public class FileController {
 
     @Autowired
@@ -33,15 +33,12 @@ public class FileController {
 
     @GetMapping("/files")
     public ResponseEntity<Flux<FileInfoDTO>> getListFiles() {
-        Stream<FileInfoDTO> fileInfoStream = storageService.loadAll().map(path -> {
-            String filename = path.getFileName().toString();
-            String url = UriComponentsBuilder.newInstance().path("/files/{filename}").buildAndExpand(filename).toUriString();
-            return new FileInfoDTO(filename, url);
+        Flux<FileInfoDTO> fileInfoStream = storageService.loadAll().map(s -> {
+            String url = UriComponentsBuilder.newInstance().path("/files/{filename}").buildAndExpand(s).toUriString();
+            return new FileInfoDTO(s, url);
         });
 
-        Flux<FileInfoDTO> fileInfosFlux = Flux.fromStream(fileInfoStream);
-
-        return ResponseEntity.status(HttpStatus.OK).body(fileInfosFlux);
+        return ResponseEntity.status(HttpStatus.OK).body(fileInfoStream);
     }
 
     @GetMapping("/files/{filename:.+}")

@@ -8,7 +8,7 @@ import java.util.Date;
 
 @RestController
 public class RootController {
-    @GetMapping("/public/ping")
+    @GetMapping("/api/v1/ping")
     public Mono<Long> ping() {
         return Mono.just(new Date().getTime());
     }

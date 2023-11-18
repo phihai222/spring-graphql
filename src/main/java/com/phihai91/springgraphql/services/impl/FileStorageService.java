@@ -7,6 +7,7 @@ import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.core.io.buffer.DefaultDataBufferFactory;
 import org.springframework.http.codec.multipart.FilePart;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -16,7 +17,6 @@ import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.stream.Stream;
 
 @Service
 public class FileStorageService implements IFileStorageService {
@@ -48,14 +48,16 @@ public class FileStorageService implements IFileStorageService {
     }
 
     @Override
-    public Stream<Path> loadAll() {
-        try {
-            return Files.walk(this.root, 1)
-                    .filter(path -> !path.equals(this.root))
-                    .map(this.root::relativize);
-        } catch (IOException e) {
-            throw new RuntimeException("Could not load the files!");
-        }
+    @PreAuthorize("hasRole('USER')")
+    public Flux<String> loadAll() {
+        return Flux.just("image1", "image2" );
+//        try {
+//            return Files.walk(this.root, 1)
+//                    .filter(path -> !path.equals(this.root))
+//                    .map(this.root::relativize);
+//        } catch (IOException e) {
+//            throw new RuntimeException("Could not load the files!");
+//        }
     }
 
     @Override

@@ -58,7 +58,7 @@ public class SecurityConfig {
                         .pathMatchers("/graphiql").permitAll()
                         .pathMatchers("/graphql").permitAll()
                         .pathMatchers("/actuator/**").permitAll()
-                        .pathMatchers("/public/**").permitAll()
+                        .pathMatchers("/api/**").permitAll()
                         .pathMatchers(
                                 "/v3/api-docs/**",
                                 "/configuration/ui",
