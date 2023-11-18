@@ -36,3 +36,7 @@ springdoc:
       enabled: true
   swagger-ui:
     path: /swagger-ui.html
+
+server:
+  error:
+    include-message: always

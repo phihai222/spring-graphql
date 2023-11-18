@@ -29,6 +29,7 @@ public class FileController {
     public Mono<ResponseEntity<ResponseMessage>> uploadFile(@RequestPart("file") Mono<FilePart> filePartMono) {
         return storageService.save(filePartMono).map(
                 (filename) -> ResponseEntity.ok().body(new ResponseMessage("Uploaded the file successfully: " + filename)));
+        //TODO Save file info to database
     }
 
     @PostMapping(value = "/upload-multi", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
