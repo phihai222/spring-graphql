@@ -47,21 +47,17 @@ public class FileStorageService implements IFileStorageService {
         // Operator called default onErrorDropped
         return filePartMono
                 .map(Part::content) //Get Content
-                .<Mono<FilePart>>handle((bs, sink) -> {
+                .map(dataBufferFlux -> {
                     try {
-                        var is = getInputStreamFromFluxDataBuffer(bs); //Convert Content to InputStream
-                        var mimeType = detectDocTypeUsingDetector(is); //Get Mimetype by Tika
-                        if (mimeType.contains("image")) {
-                            sink.next(filePartMono);
-                            return;
-                        }
-
-                        sink.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid Image"));
+                        var is = getInputStreamFromFluxDataBuffer(dataBufferFlux);
+                        return detectDocTypeUsingDetector(is);
                     } catch (IOException e) {
-                        sink.error(new RuntimeException(e));
+                        throw new RuntimeException(e);
                     }
                 })
-                .flatMap(mediaType -> filePartMono)
+                .flatMap(mimeType -> mimeType.contains("image") ?
+                        filePartMono : Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST,"Invalid Image"))
+                )
                 .flatMap(filePart -> {
                     String ext = FilenameUtils.getExtension(filePart.filename());
                     String newFileName = UUID.randomUUID() + "." + ext;
