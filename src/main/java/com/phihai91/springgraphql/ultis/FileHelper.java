@@ -1,16 +1,14 @@
 package com.phihai91.springgraphql.ultis;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
 import org.apache.tika.Tika;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
+import java.io.*;
 
 @Slf4j
 public class FileHelper {
@@ -32,6 +30,7 @@ public class FileHelper {
 
     public static String detectDocTypeUsingDetector(InputStream stream) throws IOException {
         Tika tika = new Tika();
-        return tika.detect(stream);
+        byte[] bytes = IOUtils.toByteArray(stream); // Convert to byte to avoid read end dead by Input Stream.
+        return tika.detect(bytes);
     }
 }

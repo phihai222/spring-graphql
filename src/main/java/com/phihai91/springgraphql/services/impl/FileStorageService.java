@@ -43,8 +43,6 @@ public class FileStorageService implements IFileStorageService {
     @Override
     @PreAuthorize("hasRole('USER')")
     public Mono<String> save(Mono<FilePart> filePartMono) {
-        //TODO Dead Read End Bug need to fix reactor.core.Exceptions$ErrorCallbackNotImplemented: java.io.IOException: Read end dead
-        // Operator called default onErrorDropped
         return filePartMono
                 .map(Part::content) //Get Content
                 .map(dataBufferFlux -> {
