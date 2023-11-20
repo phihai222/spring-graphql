@@ -1,9 +1,11 @@
 package com.phihai91.springgraphql.controllers;
 
+import com.phihai91.springgraphql.entities.File;
 import com.phihai91.springgraphql.payloads.FileInfoDTO;
 import com.phihai91.springgraphql.payloads.ResponseMessage;
 import com.phihai91.springgraphql.services.IFileStorageService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpHeaders;
@@ -16,20 +18,20 @@ import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-
 @RestController
 @RequestMapping("/api/v1/files")
 @SecurityRequirement(name = "bearerAuth")
+@Slf4j
 public class FileController {
 
     @Autowired
     private IFileStorageService storageService;
 
     @PostMapping(value = "/upload-single", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public Mono<ResponseEntity<ResponseMessage>> uploadFile(@RequestPart("file") Mono<FilePart> filePartMono) {
-        return storageService.save(filePartMono).map(
-                (filename) -> ResponseEntity.ok().body(new ResponseMessage("Uploaded the file successfully: " + filename)));
-        //TODO Save file info to database
+    public Mono<ResponseEntity<File>> uploadFile(@RequestPart("file") Mono<FilePart> filePartMono) {
+        return storageService.save(filePartMono)
+                .flatMap(fileName -> storageService.saveFileData(fileName))
+                .map(ResponseEntity::ok);
     }
 
     @PostMapping(value = "/upload-multi", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})

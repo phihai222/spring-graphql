@@ -1,5 +1,6 @@
 package com.phihai91.springgraphql.services;
 
+import com.phihai91.springgraphql.entities.File;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.codec.multipart.FilePart;
 import reactor.core.publisher.Flux;
@@ -14,4 +15,6 @@ public interface IFileStorageService {
     boolean delete(String filename);
 
     Flux<String> loadAll();
+
+    Mono<File> saveFileData(String fileName);
 }

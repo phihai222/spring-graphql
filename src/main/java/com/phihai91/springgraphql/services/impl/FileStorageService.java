@@ -1,8 +1,12 @@
 package com.phihai91.springgraphql.services.impl;
 
+import com.phihai91.springgraphql.entities.File;
+import com.phihai91.springgraphql.repositories.IFileRepository;
+import com.phihai91.springgraphql.securities.AppUserDetails;
 import com.phihai91.springgraphql.services.IFileStorageService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.core.io.buffer.DataBuffer;
@@ -12,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.http.codec.multipart.Part;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
@@ -32,8 +37,14 @@ import static com.phihai91.springgraphql.ultis.FileHelper.getInputStreamFromFlux
 public class FileStorageService implements IFileStorageService {
     private final Path root = Paths.get("uploads");
 
+    @Autowired
+    private IFileRepository fileRepository;
+
     @Override
+    @PreAuthorize("hasRole('USER')")
     public Mono<String> save(Mono<FilePart> filePartMono) {
+        //TODO Dead Read End Bug need to fix reactor.core.Exceptions$ErrorCallbackNotImplemented: java.io.IOException: Read end dead
+        // Operator called default onErrorDropped
         return filePartMono
                 .map(Part::content) //Get Content
                 .<Mono<FilePart>>handle((bs, sink) -> {
@@ -85,6 +96,19 @@ public class FileStorageService implements IFileStorageService {
 //        } catch (IOException e) {
 //            throw new RuntimeException("Could not load the files!");
 //        }
+    }
+
+    @Override
+    @PreAuthorize("hasRole('USER')")
+    public Mono<File> saveFileData(String fileName) {
+        return ReactiveSecurityContextHolder.getContext()
+                .map(securityContext -> (AppUserDetails) securityContext.getAuthentication().getPrincipal())
+                .flatMap(userDetails -> fileRepository.save(File.builder()
+                        .name(fileName)
+                        .ext(FilenameUtils.getExtension(fileName))
+                        .isBinding(false)
+                        .createdBy(userDetails.getId())
+                        .build()));
     }
 
     @Override
