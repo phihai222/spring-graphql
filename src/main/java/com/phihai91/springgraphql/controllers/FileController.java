@@ -8,7 +8,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.buffer.DataBuffer;
-import org.springframework.http.HttpHeaders;
+import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -34,12 +34,7 @@ public class FileController {
                 .map(ResponseEntity::ok);
     }
 
-    @PostMapping(value = "/upload-multi", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity<Flux<ResponseMessage>> uploadFile(@RequestPart("file") Flux<FilePart> filePartMono) {
-        var res = Flux.just(new ResponseMessage("ok"));
-        return ResponseEntity.status(HttpStatus.OK).body(res);
-    }
-
+    //TODO /upload-multi API
     @GetMapping("/files")
     public ResponseEntity<Flux<FileInfoDTO>> getListFiles() {
         Flux<FileInfoDTO> fileInfoStream = storageService.loadAll().map(s -> {
@@ -50,12 +45,17 @@ public class FileController {
         return ResponseEntity.status(HttpStatus.OK).body(fileInfoStream);
     }
 
-    @GetMapping("/files/{filename:.+}")
-    public ResponseEntity<Flux<DataBuffer>> getFile(@PathVariable String filename) {
-        Flux<DataBuffer> file = storageService.load(filename);
-
-        return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
-                .contentType(MediaType.APPLICATION_OCTET_STREAM).body(file);
+    @GetMapping(value = "/files/{id}", produces = MediaType.IMAGE_JPEG_VALUE)
+    public ResponseEntity<Mono<byte[]>> getFile(@PathVariable String id) {
+        Flux<DataBuffer> file = storageService.load(id);
+        var result = DataBufferUtils.join(file)
+                .map(dataBuffer -> {
+                    byte[] bytes = new byte[dataBuffer.readableByteCount()];
+                    dataBuffer.read(bytes);
+                    DataBufferUtils.release(dataBuffer);
+                    return bytes;
+                });
+        return ResponseEntity.ok().body(result);
     }
 
     @DeleteMapping("/files/{filename:.+}")
