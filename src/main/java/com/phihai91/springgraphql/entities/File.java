@@ -19,6 +19,8 @@ public record File(
         String ext,
         Boolean isBinding,
         String createdBy,
+
+        Visibility visibility,
         @CreatedDate
         LocalDateTime createdDate,
         @LastModifiedDate

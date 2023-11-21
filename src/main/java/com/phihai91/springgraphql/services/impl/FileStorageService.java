@@ -1,6 +1,7 @@
 package com.phihai91.springgraphql.services.impl;
 
 import com.phihai91.springgraphql.entities.File;
+import com.phihai91.springgraphql.entities.Visibility;
 import com.phihai91.springgraphql.repositories.IFileRepository;
 import com.phihai91.springgraphql.securities.AppUserDetails;
 import com.phihai91.springgraphql.services.IFileStorageService;
@@ -64,7 +65,7 @@ public class FileStorageService implements IFileStorageService {
                     }
                 })
                 .flatMap(mimeType -> mimeType.contains("image") ?
-                        filePartMono : Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST,"Invalid Image"))
+                        filePartMono : Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid Image"))
                 )
                 .flatMap(filePart -> {
                     String ext = FilenameUtils.getExtension(filePart.filename());
@@ -110,6 +111,7 @@ public class FileStorageService implements IFileStorageService {
                 .map(securityContext -> (AppUserDetails) securityContext.getAuthentication().getPrincipal())
                 .flatMap(userDetails -> fileRepository.save(File.builder()
                         .name(fileName)
+                        .visibility(Visibility.PUBLIC)
                         .ext(FilenameUtils.getExtension(fileName))
                         .isBinding(false)
                         .createdBy(userDetails.getId())
