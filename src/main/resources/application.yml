@@ -19,6 +19,8 @@ logging:
 jwtSecret: ${JWT_SECRET}
 jwtExpirationMs: 6000000
 otpExpirationSeconds: 30000000
+maxSizeUpload: 2048000
+fileSrc: uploads
 
 #Healthcheck endpoint with details: actuator/health/custom
 management:

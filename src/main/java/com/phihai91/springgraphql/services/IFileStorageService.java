@@ -8,7 +8,7 @@ import reactor.core.publisher.Mono;
 
 public interface IFileStorageService {
 
-    Mono<String> save(Mono<FilePart> filePartMono);
+    Mono<String> save(Mono<FilePart> filePartMono, long contentLength);
 
     Flux<DataBuffer> load(String filename);
 

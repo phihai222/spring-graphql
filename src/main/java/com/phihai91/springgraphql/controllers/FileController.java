@@ -28,8 +28,8 @@ public class FileController {
     private IFileStorageService storageService;
 
     @PostMapping(value = "/upload-single", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public Mono<ResponseEntity<File>> uploadFile(@RequestPart("file") Mono<FilePart> filePartMono) {
-        return storageService.save(filePartMono)
+    public Mono<ResponseEntity<File>> uploadFile(@RequestPart("file") Mono<FilePart> filePartMono, @RequestHeader("Content-Length") long contentLength) {
+        return storageService.save(filePartMono, contentLength)
                 .flatMap(fileName -> storageService.saveFileData(fileName))
                 .map(ResponseEntity::ok);
     }

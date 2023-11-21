@@ -7,6 +7,7 @@ import com.phihai91.springgraphql.services.IFileStorageService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.core.io.buffer.DataBuffer;
@@ -35,14 +36,23 @@ import static com.phihai91.springgraphql.ultis.FileHelper.getInputStreamFromFlux
 @Service
 @Slf4j
 public class FileStorageService implements IFileStorageService {
-    private final Path root = Paths.get("uploads");
 
     @Autowired
     private IFileRepository fileRepository;
 
+    @Value("${maxSizeUpload}")
+    private long maxSizeUpload;
+
+    @Value("${fileSrc}")
+    private String fileSrc;
+
     @Override
     @PreAuthorize("hasRole('USER')")
-    public Mono<String> save(Mono<FilePart> filePartMono) {
+    public Mono<String> save(Mono<FilePart> filePartMono, long contentLength) {
+        final Path root = Paths.get(fileSrc);
+        if (contentLength > maxSizeUpload)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Image size must not larger than 2MB");
+
         return filePartMono
                 .map(Part::content) //Get Content
                 .map(dataBufferFlux -> {
@@ -65,6 +75,7 @@ public class FileStorageService implements IFileStorageService {
 
     @Override
     public Flux<DataBuffer> load(String filename) {
+        final Path root = Paths.get(this.fileSrc);
         try {
             Path file = root.resolve(filename);
             Resource resource = new UrlResource(file.toUri());
@@ -107,6 +118,7 @@ public class FileStorageService implements IFileStorageService {
 
     @Override
     public boolean delete(String filename) {
+        final Path root = Paths.get(this.fileSrc);
         try {
             Path file = root.resolve(filename);
             return Files.deleteIfExists(file);
