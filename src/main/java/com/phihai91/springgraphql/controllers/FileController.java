@@ -58,22 +58,22 @@ public class FileController {
         return ResponseEntity.ok().body(result);
     }
 
-    @DeleteMapping("/files/{filename:.+}")
-    public Mono<ResponseEntity<ResponseMessage>> deleteFile(@PathVariable String filename) {
+    @DeleteMapping("/files/{id}")
+    public Mono<ResponseEntity<ResponseMessage>> deleteFile(@PathVariable String id) {
         String message;
 
         try {
-            boolean existed = storageService.delete(filename);
+            boolean existed = storageService.delete(id);
 
             if (existed) {
-                message = "Delete the file successfully: " + filename;
+                message = "Delete the file successfully: " + id;
                 return Mono.just(ResponseEntity.ok().body(new ResponseMessage(message)));
             }
 
             message = "The file does not exist!";
             return Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ResponseMessage(message)));
         } catch (Exception e) {
-            message = "Could not delete the file: " + filename + ". Error: " + e.getMessage();
+            message = "Could not delete the file: " + id + ". Error: " + e.getMessage();
             return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ResponseMessage(message)));
         }
     }

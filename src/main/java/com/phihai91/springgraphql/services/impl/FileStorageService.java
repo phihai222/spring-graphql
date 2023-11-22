@@ -75,20 +75,27 @@ public class FileStorageService implements IFileStorageService {
     }
 
     @Override
-    public Flux<DataBuffer> load(String filename) {
+    @PreAuthorize("hasRole('USER')")
+    public Flux<DataBuffer> load(String id) {
         final Path root = Paths.get(this.fileSrc);
-        try {
-            Path file = root.resolve(filename);
-            Resource resource = new UrlResource(file.toUri());
+        Mono<File> result = fileRepository.findById(id)
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "File not found")));
 
-            if (resource.exists() || resource.isReadable()) {
-                return DataBufferUtils.read(resource, new DefaultDataBufferFactory(), 4096);
-            } else {
-                throw new RuntimeException("Could not read the file!");
-            }
-        } catch (MalformedURLException e) {
-            throw new RuntimeException("Error: " + e.getMessage());
-        }
+        return result.map(File::name)
+                .<Flux<DataBuffer>>handle((filename, sink) -> {
+                    try {
+                        Path file = root.resolve(filename);
+                        Resource resource = new UrlResource(file.toUri());
+
+                        if (resource.exists() || resource.isReadable()) {
+                            sink.next(DataBufferUtils.read(resource, new DefaultDataBufferFactory(), 4096));
+                        } else {
+                            sink.error(new RuntimeException("Could not read the file!"));
+                        }
+                    } catch (MalformedURLException e) {
+                        sink.error(new RuntimeException("Error: " + e.getMessage()));
+                    }
+                }).flatMapMany(dataBufferFlux -> dataBufferFlux);
     }
 
     @Override
