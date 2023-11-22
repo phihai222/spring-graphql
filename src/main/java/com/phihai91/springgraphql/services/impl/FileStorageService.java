@@ -24,9 +24,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.UUID;
@@ -116,24 +118,28 @@ public class FileStorageService implements IFileStorageService {
     @Override
     @PreAuthorize("hasRole('USER')")
     public Mono<Boolean> delete(String id) {
-//        final Path root = Paths.get(this.fileSrc);
+        final Path root = Paths.get(this.fileSrc);
 
         Mono<AppUserDetails> appUserDetailsMono = ReactiveSecurityContextHolder.getContext()
                 .map(UserHelper::getUserDetails);
 
         Mono<File> fileDataResult = fileRepository.findById(id)
-                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "File not found")));
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found")));
 
         return fileDataResult
-                .zipWith(appUserDetailsMono, (file, userDetails) -> file.createdBy().equals(userDetails.getId()))
-                .map(aBoolean -> aBoolean); //TODO delete file in server
+                .publishOn(Schedulers.boundedElastic())
+                .zipWith(appUserDetailsMono, (f, userDetails) -> {
+                    if (f.createdBy().equals(userDetails.getId())) {
+                        try {
+                            Path fileName = root.resolve(f.name());
+                            return Files.deleteIfExists(fileName);
+                        } catch (IOException e) {
+                            throw new RuntimeException("Error: " + e.getMessage());
+                        }
+                    }
 
-//        final Path root = Paths.get(this.fileSrc);
-//        try {
-//            Path file = root.resolve(id);
-//            return Files.deleteIfExists(file);
-//        } catch (IOException e) {
-//            throw new RuntimeException("Error: " + e.getMessage());
-//        }
+                    throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Don't have permission");
+                })
+                .doOnNext(aBoolean -> fileRepository.deleteById(id).subscribe());
     }
 }
