@@ -1,6 +1,7 @@
 package com.phihai91.springgraphql.controllers;
 
 import com.phihai91.springgraphql.entities.File;
+import com.phihai91.springgraphql.payloads.CommonModel;
 import com.phihai91.springgraphql.services.IFileStorageService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.extern.slf4j.Slf4j;
@@ -48,8 +49,12 @@ public class FileController {
     }
 
     @DeleteMapping("/files/{id}")
-    public ResponseEntity<Mono<Boolean>> deleteFile(@PathVariable String id) {
-        Mono<Boolean> result = storageService.delete(id);
+    public ResponseEntity<Mono<CommonModel.CommonPayload>> deleteFile(@PathVariable String id) {
+        var result = storageService.delete(id)
+                .map(aBoolean -> CommonModel.CommonPayload.builder()
+                        .status(aBoolean ? CommonModel.CommonStatus.SUCCESS : CommonModel.CommonStatus.FAILED)
+                        .message(aBoolean ? "Delete Successfully" : "Delete Failed")
+                        .build());
         return ResponseEntity.ok().body(result);
     }
 }
