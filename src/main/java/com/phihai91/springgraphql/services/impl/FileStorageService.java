@@ -5,6 +5,7 @@ import com.phihai91.springgraphql.entities.Visibility;
 import com.phihai91.springgraphql.repositories.IFileRepository;
 import com.phihai91.springgraphql.securities.AppUserDetails;
 import com.phihai91.springgraphql.services.IFileStorageService;
+import com.phihai91.springgraphql.ultis.UserHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +27,6 @@ import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.UUID;
@@ -113,13 +113,26 @@ public class FileStorageService implements IFileStorageService {
     }
 
     @Override
-    public boolean delete(String filename) {
+    @PreAuthorize("hasRole('USER')")
+    public Mono<Boolean> delete(String id) {
         final Path root = Paths.get(this.fileSrc);
-        try {
-            Path file = root.resolve(filename);
-            return Files.deleteIfExists(file);
-        } catch (IOException e) {
-            throw new RuntimeException("Error: " + e.getMessage());
-        }
+
+        Mono<AppUserDetails> appUserDetailsMono = ReactiveSecurityContextHolder.getContext()
+                .map(UserHelper::getUserDetails);
+
+        Mono<File> fileDataResult = fileRepository.findById(id)
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.BAD_REQUEST, "File not found")));
+
+        return fileDataResult
+                .zipWith(appUserDetailsMono, (file, userDetails) -> file.createdBy().equals(userDetails.getId()))
+                .map(aBoolean -> aBoolean); //TODO delete file in server
+
+//        final Path root = Paths.get(this.fileSrc);
+//        try {
+//            Path file = root.resolve(id);
+//            return Files.deleteIfExists(file);
+//        } catch (IOException e) {
+//            throw new RuntimeException("Error: " + e.getMessage());
+//        }
     }
 }

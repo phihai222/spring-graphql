@@ -12,7 +12,7 @@ public interface IFileStorageService {
 
     Flux<DataBuffer> load(String filename);
 
-    boolean delete(String filename);
+    Mono<Boolean>  delete(String filename);
 
     Mono<File> saveFileData(String fileName);
 }
