@@ -14,7 +14,5 @@ public interface IFileStorageService {
 
     boolean delete(String filename);
 
-    Flux<String> loadAll();
-
     Mono<File> saveFileData(String fileName);
 }

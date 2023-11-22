@@ -1,7 +1,6 @@
 package com.phihai91.springgraphql.controllers;
 
 import com.phihai91.springgraphql.entities.File;
-import com.phihai91.springgraphql.payloads.FileInfoDTO;
 import com.phihai91.springgraphql.payloads.ResponseMessage;
 import com.phihai91.springgraphql.services.IFileStorageService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -14,7 +13,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -35,16 +33,6 @@ public class FileController {
     }
 
     //TODO /upload-multi API
-    @GetMapping("/files")
-    public ResponseEntity<Flux<FileInfoDTO>> getListFiles() {
-        Flux<FileInfoDTO> fileInfoStream = storageService.loadAll().map(s -> {
-            String url = UriComponentsBuilder.newInstance().path("/files/{filename}").buildAndExpand(s).toUriString();
-            return new FileInfoDTO(s, url);
-        });
-
-        return ResponseEntity.status(HttpStatus.OK).body(fileInfoStream);
-    }
-
     @GetMapping(value = "/files/{id}", produces = MediaType.IMAGE_JPEG_VALUE)
     public ResponseEntity<Mono<byte[]>> getFile(@PathVariable String id) {
         Flux<DataBuffer> file = storageService.load(id);

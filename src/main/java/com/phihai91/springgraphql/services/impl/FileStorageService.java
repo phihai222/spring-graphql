@@ -100,19 +100,6 @@ public class FileStorageService implements IFileStorageService {
 
     @Override
     @PreAuthorize("hasRole('USER')")
-    public Flux<String> loadAll() {
-        return Flux.just("image1", "image2");
-//        try {
-//            return Files.walk(this.root, 1)
-//                    .filter(path -> !path.equals(this.root))
-//                    .map(this.root::relativize);
-//        } catch (IOException e) {
-//            throw new RuntimeException("Could not load the files!");
-//        }
-    }
-
-    @Override
-    @PreAuthorize("hasRole('USER')")
     public Mono<File> saveFileData(String fileName) {
         return ReactiveSecurityContextHolder.getContext()
                 .map(securityContext -> (AppUserDetails) securityContext.getAuthentication().getPrincipal())
