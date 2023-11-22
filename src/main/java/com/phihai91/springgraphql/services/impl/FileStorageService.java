@@ -51,6 +51,7 @@ public class FileStorageService implements IFileStorageService {
     @PreAuthorize("hasRole('USER')")
     public Mono<String> save(Mono<FilePart> filePartMono, long contentLength) {
         final Path root = Paths.get(fileSrc);
+
         if (contentLength > maxSizeUpload)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Image size must not larger than 2MB");
 
@@ -102,7 +103,7 @@ public class FileStorageService implements IFileStorageService {
     @PreAuthorize("hasRole('USER')")
     public Mono<File> saveFileData(String fileName) {
         return ReactiveSecurityContextHolder.getContext()
-                .map(securityContext -> (AppUserDetails) securityContext.getAuthentication().getPrincipal())
+                .map(UserHelper::getUserDetails)
                 .flatMap(userDetails -> fileRepository.save(File.builder()
                         .name(fileName)
                         .visibility(Visibility.PUBLIC)
@@ -115,7 +116,7 @@ public class FileStorageService implements IFileStorageService {
     @Override
     @PreAuthorize("hasRole('USER')")
     public Mono<Boolean> delete(String id) {
-        final Path root = Paths.get(this.fileSrc);
+//        final Path root = Paths.get(this.fileSrc);
 
         Mono<AppUserDetails> appUserDetailsMono = ReactiveSecurityContextHolder.getContext()
                 .map(UserHelper::getUserDetails);

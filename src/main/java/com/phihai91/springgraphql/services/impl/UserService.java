@@ -6,10 +6,10 @@ import com.phihai91.springgraphql.exceptions.ForbiddenException;
 import com.phihai91.springgraphql.payloads.CommonModel;
 import com.phihai91.springgraphql.payloads.UserModel;
 import com.phihai91.springgraphql.repositories.IUserRepository;
-import com.phihai91.springgraphql.securities.AppUserDetails;
 import com.phihai91.springgraphql.services.IAuthService;
 import com.phihai91.springgraphql.services.IRedisService;
 import com.phihai91.springgraphql.services.IUserService;
+import com.phihai91.springgraphql.ultis.UserHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -36,7 +36,7 @@ public class UserService implements IUserService {
     @PreAuthorize("hasRole('USER')")
     public Mono<UserModel.User> getCurrentUserInfo() {
         return ReactiveSecurityContextHolder.getContext()
-                .map(securityContext -> (AppUserDetails) securityContext.getAuthentication().getPrincipal())
+                .map(UserHelper::getUserDetails)
                 .flatMap(appUserDetails -> userRepository.findById(appUserDetails.getId()))
                 .map(user -> UserModel.User.builder()
                         .id(user.id())
@@ -55,7 +55,7 @@ public class UserService implements IUserService {
     @PreAuthorize("hasRole('USER')")
     public Mono<UserModel.User> updateUserInfo(UserModel.UpdateUserInput input) {
         return ReactiveSecurityContextHolder.getContext()
-                .map(securityContext -> (AppUserDetails) securityContext.getAuthentication().getPrincipal())
+                .map(UserHelper::getUserDetails)
                 .flatMap(u -> userRepository.findById(u.getId()))// Get user from database
                 .flatMap(u -> (u.twoMFA() && input.email() != null) ? // Start validate 2MF is enable or not.
                         Mono.error(new ForbiddenException("2MFA must be deactivate to change email")) : Mono.just(u)) // If 2MF is enable, reject change email
@@ -89,7 +89,7 @@ public class UserService implements IUserService {
     @PreAuthorize("hasRole('USER')")
     public Mono<UserModel.SetTwoMFAPayload> setTwoMFA() {
         return ReactiveSecurityContextHolder.getContext()
-                .map(securityContext -> (AppUserDetails) securityContext.getAuthentication().getPrincipal())
+                .map(UserHelper::getUserDetails)
                 .flatMap(appUserDetails -> userRepository.findById(appUserDetails.getId()))
                 .flatMap(user -> user.email() == null ?
                         Mono.error(new ForbiddenException("Email must be set before active 2MFA")) : Mono.just(user))
@@ -111,7 +111,7 @@ public class UserService implements IUserService {
     @PreAuthorize("hasRole('USER')")
     public Mono<CommonModel.CommonPayload> verifyTwoMFOtp(String otp) {
         return ReactiveSecurityContextHolder.getContext()
-                .map(securityContext -> (AppUserDetails) securityContext.getAuthentication().getPrincipal())
+                .map(UserHelper::getUserDetails)
                 .flatMap(userDetails -> redisService.verifyOtp(userDetails.getId(), otp)
                         .flatMap(aBoolean -> aBoolean ? Mono.just(userDetails) : Mono.error(new BadRequestException("Invalid OTP"))))
                 .flatMap(appUserDetails -> userRepository.findById(appUserDetails.getId()) //Get User from db
