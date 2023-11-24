@@ -8,6 +8,7 @@ import org.springframework.graphql.execution.RuntimeWiringConfigurer;
 
 @Configuration
 public class GraphQlConfig {
+
     @Bean
     RuntimeWiringConfigurer runtimeWiringConfigurer() {
         // Adds all default validation rules in library
