@@ -7,7 +7,9 @@ import com.phihai91.springgraphql.repositories.IUserRepository;
 import com.phihai91.springgraphql.payloads.PostModel;
 import com.phihai91.springgraphql.securities.AppUserDetails;
 import com.phihai91.springgraphql.services.IPostService;
+import com.phihai91.springgraphql.ultis.CursorUtils;
 import com.phihai91.springgraphql.ultis.UserHelper;
+import graphql.relay.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -16,10 +18,16 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 public class PostService implements IPostService {
     @Autowired
     private IPostRepository postRepository;
+
+    @Autowired
+    private CursorUtils cursorUtils;
 
     @Autowired
     private IUserRepository userRepository;
@@ -66,7 +74,22 @@ public class PostService implements IPostService {
     }
 
     @Override
-    public Flux<PostModel.PostConnection> getMyPosts(Integer first, String after, Integer last, String before) {
-        return null;
+    public Mono<Connection<Post>> getMyPosts(int first, String cursor) {
+        // TODO implement after cursor
+
+        Mono<List<Edge<Post>>> collect = postRepository.findAllByUserId("654a1f2f84d82218bd7d5eb4", 0, first)
+                .map(post -> new DefaultEdge<>(post, cursorUtils.from(post.id())))
+                .collect(Collectors.toUnmodifiableList());
+
+        return collect.map(edges -> {
+            var firstCursor = cursorUtils.getFirstCursorFrom(edges);
+            var lastCursor = cursorUtils.getLastCursorFrom(edges);
+            DefaultPageInfo pageInfo = new DefaultPageInfo(
+                    firstCursor, lastCursor,
+                    cursor != null,
+                    edges.size() >= first);
+
+            return new DefaultConnection<>(edges, pageInfo);
+        });
     }
 }

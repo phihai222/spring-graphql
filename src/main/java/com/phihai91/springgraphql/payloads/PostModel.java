@@ -1,7 +1,6 @@
 package com.phihai91.springgraphql.payloads;
 
 import com.phihai91.springgraphql.entities.Visibility;
-import graphql.relay.PageInfo;
 import lombok.Builder;
 
 import java.time.LocalDateTime;
@@ -34,20 +33,5 @@ public class PostModel {
             Visibility visibility,
             List<String> photoUrl,
             List<CommentModel.Comment> comments
-    ) {
-    }
-
-    @Builder
-    public record PostConnection(
-            PostEdge edge,
-            PageInfo pageInfo
-    ) {
-    }
-
-    @Builder
-    public record PostEdge(
-            String cursor,
-            Post node
-    ) {
-    }
+    ) {}
 }

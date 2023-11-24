@@ -1,7 +1,7 @@
 type Query {
     getMyInfo: User
     getUser(username: String!) : User
-    getMyPosts(first: Int, after: String, last: Int, before: String): [PostConnection]
+    getMyPosts(first: Int!,after: String): PostConnection
     getCommentByPostId(postId: ID!): [Comment] #Todo implement Relays
 }
 
@@ -18,24 +18,6 @@ type Mutation {
     setTwoMF: SetTwoMFPayload
     verifyTwoMFOtp(input: String! @Size(min: 6, max: 6)): CommonPayload
 }
-
-type PostConnection {
-    edge: [PostEdge]
-    pageInfo: PageInfo!
-}
-
-type PostEdge {
-    cursor: String!
-    node: Post!
-}
-
-type PageInfo {
-    startCursor: String
-    endCursor: String
-    hasNextPage: Boolean!
-    hasPreviousPage: Boolean!
-}
-
 
 type CommonPayload {
     status: CommonStatus!
