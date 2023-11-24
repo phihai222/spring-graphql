@@ -38,7 +38,9 @@ public record Post(
                                 .photoUrl(photoUrls)
                                 .content(content)
                                 .visibility(visibility)
+                                .userId(userId)
                                 .build())
+                        .createdDate(createdDate)
                         .build();
         }
 }

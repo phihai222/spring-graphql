@@ -1,4 +1,4 @@
-package com.phihai91.springgraphql.controllers;
+package com.phihai91.springgraphql.controllers.REST;
 
 import com.phihai91.springgraphql.entities.File;
 import com.phihai91.springgraphql.payloads.CommonModel;

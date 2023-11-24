@@ -21,7 +21,12 @@ public class PostController {
     }
 
     @QueryMapping
-    Flux<PostModel.CreatePostPayload> getMyPosts() {
-        return postService.getMyPosts();
+    Flux<PostModel.PostConnection> getMyPosts(
+            @Argument("first") Integer first,
+            @Argument("after") String after,
+            @Argument("last") Integer last,
+            @Argument("before") String before
+    ) {
+        return postService.getMyPosts(first, after, last, before);
     }
 }
