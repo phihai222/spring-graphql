@@ -75,13 +75,12 @@ public class PostService implements IPostService {
     @Override
     @PreAuthorize("hasRole('USER')")
     public Mono<Connection<Post>> getMyPosts(int first, String cursor) {
-        // TODO implement after cursor
         Mono<AppUserDetails> appUserDetailsMono = ReactiveSecurityContextHolder.getContext()
                 .map(UserHelper::getUserDetails);
 
         return appUserDetailsMono
                 .flatMap(appUserDetails ->
-                    postRepository.findAllByUserId(appUserDetails.getId(), 0, first)
+                    getPost(appUserDetails.getId(), first, cursor)
                         .map(post -> (Edge<Post>) new DefaultEdge<>(post, cursorUtils.from(post.id())))
                         .collect(Collectors.toUnmodifiableList()))
                 .map(edges -> {
@@ -93,5 +92,10 @@ public class PostService implements IPostService {
 
                     return new DefaultConnection<>(edges, pageInfo);
                 });
+    }
+
+    private Flux<Post> getPost(String userId, int first, String cursor) {
+        return cursor == null ? postRepository.findAllByUserIdStart(userId, first)
+                : postRepository.findAllByUserIdBefore(userId, cursor, first);
     }
 }

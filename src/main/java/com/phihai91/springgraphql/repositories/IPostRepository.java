@@ -15,10 +15,16 @@ public interface IPostRepository extends ReactiveMongoRepository<Post, String> {
     @Query("{userId: ?0}")
     Flux<Post> findAllByUserId(String userId, Pageable pageable);
     @Aggregation(pipeline = {
-            "{ '$match': { 'userId' : ?0 } }",
-            "{ '$sort' : { 'createdDate' : 1 } }",
-            "{ '$skip' : ?1 }",
+            "{ '$match': { 'userId' : ?0, '_id': {$lt: new ObjectId(?1)}}}",
+            "{ '$sort' : { 'createdDate' : -1 } }",
             "{ '$limit': ?2 }"
     })
-    Flux<Post> findAllByUserId(String userId, Integer skip, Integer limit);
+    Flux<Post> findAllByUserIdBefore(String userId, String beforeCursor, Integer limit);
+
+    @Aggregation(pipeline = {
+            "{ '$match': { 'userId' : ?0 }}",
+            "{ '$sort' : { 'createdDate' : -1 } }",
+            "{ '$limit': ?1 }"
+    })
+    Flux<Post> findAllByUserIdStart(String userId, Integer limit);
 }
