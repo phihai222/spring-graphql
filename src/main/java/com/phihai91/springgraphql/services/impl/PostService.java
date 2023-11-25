@@ -18,7 +18,6 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
@@ -74,22 +73,25 @@ public class PostService implements IPostService {
     }
 
     @Override
+    @PreAuthorize("hasRole('USER')")
     public Mono<Connection<Post>> getMyPosts(int first, String cursor) {
         // TODO implement after cursor
+        Mono<AppUserDetails> appUserDetailsMono = ReactiveSecurityContextHolder.getContext()
+                .map(UserHelper::getUserDetails);
 
-        Mono<List<Edge<Post>>> collect = postRepository.findAllByUserId("654a1f2f84d82218bd7d5eb4", 0, first)
-                .map(post -> new DefaultEdge<>(post, cursorUtils.from(post.id())))
-                .collect(Collectors.toUnmodifiableList());
+        return appUserDetailsMono
+                .flatMap(appUserDetails ->
+                    postRepository.findAllByUserId(appUserDetails.getId(), 0, first)
+                        .map(post -> (Edge<Post>) new DefaultEdge<>(post, cursorUtils.from(post.id())))
+                        .collect(Collectors.toUnmodifiableList()))
+                .map(edges -> {
+                    DefaultPageInfo pageInfo = new DefaultPageInfo(
+                            cursorUtils.getFirstCursorFrom(edges),
+                            cursorUtils.getLastCursorFrom(edges),
+                            cursor != null,
+                            edges.size() >= first);
 
-        return collect.map(edges -> {
-            var firstCursor = cursorUtils.getFirstCursorFrom(edges);
-            var lastCursor = cursorUtils.getLastCursorFrom(edges);
-            DefaultPageInfo pageInfo = new DefaultPageInfo(
-                    firstCursor, lastCursor,
-                    cursor != null,
-                    edges.size() >= first);
-
-            return new DefaultConnection<>(edges, pageInfo);
-        });
+                    return new DefaultConnection<>(edges, pageInfo);
+                });
     }
 }
