@@ -14,6 +14,7 @@ public record Comment(
         String userId,
         String photoUrl,
         String content,
+        String postId,
         @CreatedDate
         LocalDateTime createdDate,
         @LastModifiedDate

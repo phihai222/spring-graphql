@@ -48,7 +48,8 @@ type Comment {
     id: ID!,
     userId: ID!,
     content: String!,
-    postId: String!
+    postId: String!,
+    imageUrl: String
 }
 
 type User {
@@ -101,7 +102,8 @@ input AddFriendInput {
 #Comment
 input CommentPostInput {
     postId: ID!,
-    content: String! @Size(min: 3, max: 255)
+    content: String! @Size(min: 3, max: 255),
+    imageUrl: String
 }
 
 #Like

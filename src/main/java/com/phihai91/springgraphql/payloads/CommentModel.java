@@ -8,14 +8,16 @@ public class CommentModel {
             String id,
             String userId,
             String content,
-            String postId
+            String postId,
+            String imageUrl
     ) {
     }
 
     @Builder
     public record CommentPostInput(
             String postId,
-            String content
+            String content,
+            String imageUrl
     ) {
     }
 }
