@@ -8,11 +8,18 @@ import com.phihai91.springgraphql.repositories.ICommentRepository;
 import com.phihai91.springgraphql.repositories.IPostRepository;
 import com.phihai91.springgraphql.securities.AppUserDetails;
 import com.phihai91.springgraphql.services.ICommentService;
+import com.phihai91.springgraphql.ultis.CursorUtils;
 import com.phihai91.springgraphql.ultis.UserHelper;
+import graphql.relay.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class CommentService implements ICommentService {
@@ -20,8 +27,11 @@ public class CommentService implements ICommentService {
     private ICommentRepository commentRepository;
     @Autowired
     private IPostRepository postRepository;
+    @Autowired
+    private CursorUtils cursorUtils;
 
     @Override
+    @PreAuthorize("hasRole('USER')")
     public Mono<CommentModel.Comment> createComment(CommentModel.CommentPostInput input) {
         Mono<AppUserDetails> appUserDetailsMono = ReactiveSecurityContextHolder.getContext()
                 .map(UserHelper::getUserDetails);
@@ -43,5 +53,39 @@ public class CommentService implements ICommentService {
                 .userId(comment.userId())
                 .postId(comment.postId())
                 .build());
+    }
+
+    @Override
+    @PreAuthorize("hasRole('USER')")
+    public Mono<Connection<CommentModel.Comment>> getCommentByPostId(String postId, int first, String cursor) {
+        Mono<Post> postRes = postRepository.findById(postId)
+                .switchIfEmpty(Mono.error(new NotFoundException("Post not found")));
+
+        Mono<List<Edge<CommentModel.Comment>>> commentRes = getComments(postId, first, cursor)
+                .map(comment -> CommentModel.Comment.builder()
+                        .id(comment.id())
+                        .content(comment.content())
+                        .postId(comment.postId())
+                        .userId(comment.userId())
+                        .imageUrl(comment.photoUrl())
+                        .build())
+                .map(comment -> new DefaultEdge<>(comment, cursorUtils.from(comment.id())))
+                .collect(Collectors.toUnmodifiableList());
+
+        return postRes
+                .flatMap(p -> commentRes)
+                .map(edges -> {
+                    DefaultPageInfo pageInfo = new DefaultPageInfo(
+                            cursorUtils.getFirstCursorFrom(edges),
+                            cursorUtils.getLastCursorFrom(edges),
+                            cursor != null,
+                            edges.size() >= first);
+                    return new DefaultConnection<>(edges, pageInfo);
+                });
+    }
+
+    private Flux<Comment> getComments(String postId, int first, String cursor) {
+        return cursor == null ? commentRepository.findAllByPostIdStart(postId, first)
+                : commentRepository.findAllByPostIdBefore(postId, cursor, first);
     }
 }

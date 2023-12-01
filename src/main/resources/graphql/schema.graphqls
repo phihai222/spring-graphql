@@ -2,7 +2,7 @@ type Query {
     getMyInfo: User
     getUser(username: String!) : User
     getMyPosts(first: Int!,after: String): PostConnection
-    getCommentByPostId(postId: ID!): [Comment] #Todo implement Relays
+    getCommentByPostId(postId: String!, first: Int!,after: String): CommentConnection
 }
 
 type Mutation {

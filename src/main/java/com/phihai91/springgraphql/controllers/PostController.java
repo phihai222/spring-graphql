@@ -30,7 +30,6 @@ public class PostController {
             @Argument Integer first,
             @Argument String after
     ) {
-        log.info(after);
         return postService.getMyPosts(first, after);
     }
 }
