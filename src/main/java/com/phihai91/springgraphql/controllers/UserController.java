@@ -36,4 +36,8 @@ public class UserController {
     public Mono<CommonModel.CommonPayload> verifyTwoMFOtp(@Argument String input) {
         return userService.verifyTwoMFOtp(input);
     }
+    @QueryMapping
+    public Mono<UserModel.User> getUserByNameOrEmail(@Argument String usernameOrEmail) {
+        return userService.getUserByUsername(usernameOrEmail);
+    }
 }

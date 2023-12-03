@@ -124,4 +124,17 @@ public class UserService implements IUserService {
                         .status(CommonModel.CommonStatus.SUCCESS)
                         .build());
     }
+
+    @Override
+    public Mono<UserModel.User> getUserByUsername(String username) {
+        Mono<User> result = userRepository.findByUsernameEqualsOrEmailEquals(username, username);
+        return result.map(u -> UserModel.User.builder()
+                .username(u.username())
+                .id(u.id())
+                .email(u.email())
+                .lastName(u.userInfo().lastName())
+                .firstName(u.userInfo().firstName())
+                .avatarUrl(u.userInfo().avatarUrl())
+                .build());
+    }
 }
