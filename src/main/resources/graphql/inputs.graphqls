@@ -1,0 +1,58 @@
+
+
+input UpdateUserInput {
+    username: String
+    firstName: String
+    lastName: String
+    avatarUrl: String
+    email: String @Pattern(regexp: "^\\S+@\\S+\\.\\S+$", message: "Email invalid format")
+}
+
+#Friend
+input AcceptOrRejectFriendInput {
+    requestId: ID!,
+    status: Boolean!
+}
+
+input AddFriendInput {
+    userId: ID!,
+    message: String @Size(min: 3, max: 255)
+}
+
+#Comment
+input CommentPostInput {
+    postId: ID!,
+    content: String! @Size(min: 3, max: 255),
+    imageUrl: String
+}
+
+#Like
+
+input LikePostInput {
+    postId: ID!
+}
+
+#Post
+
+input CreatePostInput {
+    content: String @Size(min: 3, max: 255)
+    photoUrls: [String] @NotEmpty
+    visibility: Visibility
+}
+
+#Auth
+input RegistrationUserInput {
+    usernameOrEmail: String! @Pattern(regexp: "\\S*", message: "White space is not accept") @Size(min:5, max:50)
+    password: String! @Pattern(regexp: "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,50}$", message: "Has range 8-50 characters, At least 1 uppercase, 1 lowercase, 1 digit, 1 special character English letter")
+}
+
+
+input VerifyOtpInput {
+    userId: String!
+    otp: String! @Size(min: 6, max: 6)
+}
+
+input LoginUserInput {
+    usernameOrEmail: String! @Pattern(regexp: "\\S*", message: "White space is not accept") @Size(min:5, max:50)
+    password: String! @Size(min: 8, max: 50)
+}

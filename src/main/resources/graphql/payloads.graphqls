@@ -1,0 +1,61 @@
+
+type CommonPayload {
+    status: CommonStatus!
+    message: String!
+}
+
+type SetTwoMFPayload {
+    userId: String!
+    sentTo: String!
+    otp: String!
+}
+
+type AcceptOrRejectFriendPayload {
+    requestId: ID!
+    status: Status,
+}
+
+type AddFriendPayload {
+    requestId: ID!,
+    friendId: ID!,
+    message: String
+}
+
+type LikePostPayload {
+    id: ID!
+    liked: Boolean
+}
+
+type CreatePostPayload {
+    id: ID!,
+    post: Post,
+    visibility: Visibility
+}
+
+type RegistrationUserPayload {
+    id: ID!,
+    credentials: VerifyOtpPayload
+}
+
+type VerifyOtpPayload {
+    type: String
+    accessToken: String
+    signedDate: Float
+    expiredDate: Float
+}
+
+
+type LoginUserPayload {
+    userId: ID!
+    twoMFA: Boolean!,
+    sentTo: String
+    otp: String
+    credentials: VerifyOtpPayload
+}
+
+type SearchResultPayload {
+    user: [User]
+    post: [Post]
+}
+
+

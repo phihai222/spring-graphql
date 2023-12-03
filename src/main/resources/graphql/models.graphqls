@@ -1,0 +1,32 @@
+type Comment {
+    id: ID!,
+    userId: ID!,
+    content: String!,
+    postId: String!,
+    imageUrl: String
+}
+
+type User {
+    id: ID!
+    username: String
+    firstName: String
+    lastName: String
+    email: String
+    registrationDate: Float
+    avatarUrl: String
+}
+
+type Post {
+    id: ID!
+    firstName: String,
+    lastName: String,
+    content: String
+    photoUrl: [String]
+    comments: [Comment]
+    createdDate: String,
+    userId: String
+}
+
+enum Status {
+    COMPLETED
+}

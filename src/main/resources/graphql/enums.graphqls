@@ -1,0 +1,10 @@
+enum CommonStatus {
+    SUCCESS,
+    FAILED
+}
+
+enum Visibility {
+    PUBLIC,
+    PRIVATE,
+    FRIEND_ONLY
+}
