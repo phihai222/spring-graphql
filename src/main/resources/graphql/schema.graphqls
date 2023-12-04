@@ -18,6 +18,7 @@ type Mutation {
     updateUserInfo(input: UpdateUserInput!): User
     setTwoMF: SetTwoMFPayload
     verifyTwoMFOtp(input: String! @Size(min: 6, max: 6)): CommonPayload
+    deletePost(input: String!) : CommonPayload
 }
 
 

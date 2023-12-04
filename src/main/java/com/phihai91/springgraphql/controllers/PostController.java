@@ -1,6 +1,7 @@
 package com.phihai91.springgraphql.controllers;
 
 import com.phihai91.springgraphql.entities.Post;
+import com.phihai91.springgraphql.payloads.CommonModel;
 import com.phihai91.springgraphql.payloads.PostModel;
 import com.phihai91.springgraphql.services.IPostService;
 import graphql.relay.Connection;
@@ -23,13 +24,16 @@ public class PostController {
         return postService.createPost(input);
     }
 
-    //Note: view https://github.com/danvega/sessionz/tree/main
-
     @QueryMapping
     Mono<Connection<Post>> getMyPosts(
             @Argument Integer first,
             @Argument String after
     ) {
         return postService.getMyPosts(first, after);
+    }
+
+    @MutationMapping
+    Mono<CommonModel.CommonPayload> deletePost(@Argument String input){
+        return postService.deletePost(input);
     }
 }

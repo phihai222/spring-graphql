@@ -2,6 +2,9 @@ package com.phihai91.springgraphql.services.impl;
 
 import com.phihai91.springgraphql.entities.Post;
 import com.phihai91.springgraphql.entities.Visibility;
+import com.phihai91.springgraphql.exceptions.ForbiddenException;
+import com.phihai91.springgraphql.exceptions.NotFoundException;
+import com.phihai91.springgraphql.payloads.CommonModel;
 import com.phihai91.springgraphql.repositories.IPostRepository;
 import com.phihai91.springgraphql.repositories.IUserRepository;
 import com.phihai91.springgraphql.payloads.PostModel;
@@ -92,6 +95,26 @@ public class PostService implements IPostService {
 
                     return new DefaultConnection<>(edges, pageInfo);
                 });
+    }
+
+    @Override
+    @PreAuthorize("hasRole('USER')")
+    public Mono<CommonModel.CommonPayload> deletePost(String input) {
+        Mono<AppUserDetails> appUserDetailsMono = ReactiveSecurityContextHolder.getContext()
+                .map(UserHelper::getUserDetails);
+
+        Mono<Post> post = postRepository.findById(input)
+                .switchIfEmpty(Mono.error(new NotFoundException("Post not found")));
+
+        Mono<Boolean> checkValidUserId = appUserDetailsMono.zipWith(post, (u, p) -> u.getId().equals(p.userId()));
+
+        return checkValidUserId
+                .flatMap(aBoolean -> aBoolean ? postRepository.deleteById(input) :
+                        Mono.error(new ForbiddenException("Invalid permission")))
+                .then(Mono.just(CommonModel.CommonPayload.builder()
+                        .message("Post deleted")
+                        .status(CommonModel.CommonStatus.SUCCESS)
+                        .build()));
     }
 
     private Flux<Post> getPost(String userId, int first, String cursor) {
