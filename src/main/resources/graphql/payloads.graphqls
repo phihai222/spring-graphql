@@ -15,12 +15,6 @@ type AcceptOrRejectFriendPayload {
     status: Status,
 }
 
-type AddFriendPayload {
-    requestId: ID!,
-    friendId: ID!,
-    message: String
-}
-
 type LikePostPayload {
     id: ID!
     liked: Boolean
