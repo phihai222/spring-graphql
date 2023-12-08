@@ -1,11 +1,13 @@
 package com.phihai91.springgraphql.services.impl;
 
+import com.phihai91.springgraphql.entities.Friend;
 import com.phihai91.springgraphql.entities.FriendRequest;
 import com.phihai91.springgraphql.entities.User;
 import com.phihai91.springgraphql.exceptions.BadRequestException;
 import com.phihai91.springgraphql.exceptions.NotFoundException;
 import com.phihai91.springgraphql.payloads.CommonModel;
 import com.phihai91.springgraphql.payloads.FriendModel;
+import com.phihai91.springgraphql.repositories.IFriendRepository;
 import com.phihai91.springgraphql.repositories.IFriendRequestRepository;
 import com.phihai91.springgraphql.repositories.IUserRepository;
 import com.phihai91.springgraphql.securities.AppUserDetails;
@@ -18,6 +20,7 @@ import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
 import java.util.function.Function;
 
 @Service
@@ -28,6 +31,9 @@ public class FriendServiceImpl implements IFriendService {
 
     @Autowired
     private IFriendRequestRepository friendRequestRepository;
+
+    @Autowired
+    private IFriendRepository friendRepository;
 
     @Override
     @PreAuthorize("hasRole('USER')")
@@ -45,19 +51,18 @@ public class FriendServiceImpl implements IFriendService {
                 .message("Already friend")
                 .build();
 
-
         return currentUser
                 // Check request to themselves
                 .flatMap(appUserDetails -> appUserDetails.getId().equals(input.userId()) ?
                         Mono.error(new BadRequestException("Cannot request to yourself")) : Mono.just(appUserDetails))
                 .zipWith(targetUser, (appUserDetails, user) ->
-                        checkIsAlreadyFriend() ?  Mono.just(alreadyFriend) :
-                        // Find request existed or not
-                        friendRequestRepository.findFirstByFromUserEqualsAndToUserEquals(appUserDetails.getId(), user.id())
-                                // Withdraw request by delete
-                                .flatMap(this::deleteFriendRequest)
-                                // If not existed, create a new request
-                                .switchIfEmpty(saveFriendRequestOrAccept(input, appUserDetails)))
+                        checkIsAlreadyFriend() ? Mono.just(alreadyFriend) :
+                                // Find request existed or not
+                                friendRequestRepository.findFirstByFromUserEqualsAndToUserEquals(appUserDetails.getId(), user.id())
+                                        // Withdraw request by delete
+                                        .flatMap(this::deleteFriendRequest)
+                                        // If not existed, create a new request
+                                        .switchIfEmpty(saveFriendRequestOrAccept(input, appUserDetails)))
                 .flatMap(Function.identity()); // Convert Mono<Mono<T>> to Mono<T>
     }
 
@@ -81,11 +86,8 @@ public class FriendServiceImpl implements IFriendService {
                 .findFirstByFromUserEqualsAndToUserEquals(input.userId(), appUserDetails.getId());
 
         return friendRequestFromDb
-                .map(fr -> {
-                    //TODO Add friend data
-                    log.info("Create Friend Data");
-                    return fr;
-                })
+                .flatMap(fr -> updateFriendData(fr.fromUser(), fr.toUser())
+                        .map(friend -> fr))
                 .flatMap(fr -> friendRequestRepository.deleteById(fr.id())
                         .then(Mono.fromCallable(() -> acceptedRes)))
                 .switchIfEmpty(friendRequestRepository.save(FriendRequest.builder() // Create Friend Request
@@ -103,5 +105,38 @@ public class FriendServiceImpl implements IFriendService {
 
         return friendRequestRepository.deleteById(friendRequest.id())
                 .then(Mono.fromCallable(() -> withdrewRes));
+    }
+
+    @Override
+    public Mono<Friend> updateFriendData(String userId, String friendId) {
+        // Find friend data of current user, if not -> create new data
+        var currentFriendData = friendRepository.findById(userId)
+                .switchIfEmpty(friendRepository.save(Friend.builder()
+                        .id(userId)
+                        .friends(new ArrayList<>())
+                        .build()));
+
+        // Find friend data of target user, if not -> create new data
+        var targetFriendData = friendRepository.findById(friendId)
+                .switchIfEmpty(friendRepository.save(Friend.builder()
+                        .id(friendId)
+                        .friends(new ArrayList<>())
+                        .build()));
+
+        return currentFriendData.zipWith(targetFriendData, (current, target) -> {
+                    // Add friend data to current User
+                    var currentFriendList = current.friends();
+                    currentFriendList.add(friendId);
+
+                    //add friend data to target user
+                    var targetFriendList = target.friends();
+                    targetFriendList.add(userId);
+
+                    return friendRepository.save(target.withFriends(targetFriendList))
+                            .map(targetUserFriend -> current.withFriends(currentFriendList));
+                })
+                .flatMap(Function.identity())
+                // Add friend data to current User
+                .flatMap(currentUserFriendData -> friendRepository.save(currentUserFriendData));
     }
 }
