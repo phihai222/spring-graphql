@@ -14,7 +14,7 @@ public class FriendController {
     @Autowired
     private IFriendService friendService;
     @MutationMapping
-    Mono<CommonModel.CommonPayload> addFriend(@Argument FriendModel.AddFriendInput input) {
+    Mono<CommonModel.CommonPayload> requestOrAcceptFriend(@Argument FriendModel.AddFriendInput input) {
         return friendService.sendRequest(input);
     }
 

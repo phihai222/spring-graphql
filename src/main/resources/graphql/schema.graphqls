@@ -24,7 +24,7 @@ type Mutation {
     deletePost(input: String!) : CommonPayload
 
 #    Friend
-    addFriend(input: AddFriendInput!) : CommonPayload
+    requestOrAcceptFriend(input: AddFriendInput!) : CommonPayload
     acceptOrRejectFriend(input: AcceptOrRejectFriendInput!): AcceptOrRejectFriendPayload
 
 #    User
