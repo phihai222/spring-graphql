@@ -25,7 +25,7 @@ type Mutation {
 
 #    Friend
     requestOrAcceptFriend(input: AddFriendInput!) : CommonPayload
-    acceptOrRejectFriend(input: AcceptOrRejectFriendInput!): AcceptOrRejectFriendPayload
+    ignoreFriendRequest(userId: String!): CommonPayload
 
 #    User
     updateUserInfo(input: UpdateUserInput!): User

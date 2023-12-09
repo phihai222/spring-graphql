@@ -17,7 +17,7 @@ public record FriendRequest(
         String id,
         String fromUser,
         String toUser,
-
+        Boolean isIgnore,
         String message,
         @CreatedDate
         LocalDateTime createdDate,

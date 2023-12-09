@@ -9,11 +9,6 @@ input UpdateUserInput {
 }
 
 #Friend
-input AcceptOrRejectFriendInput {
-    requestId: ID!,
-    status: Boolean!
-}
-
 input AddFriendInput {
     userId: ID!,
     message: String @Size(min: 3, max: 255)

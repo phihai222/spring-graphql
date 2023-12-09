@@ -9,4 +9,6 @@ public interface IFriendService {
     Mono<CommonModel.CommonPayload> sendRequest(FriendModel.AddFriendInput input);
 
     Mono<Friend> updateFriendData(String userId, String friendId);
+
+    Mono<CommonModel.CommonPayload> ignoreFriendRequest(String userId);
 }

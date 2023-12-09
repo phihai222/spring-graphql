@@ -13,16 +13,14 @@ import reactor.core.publisher.Mono;
 public class FriendController {
     @Autowired
     private IFriendService friendService;
+
     @MutationMapping
     Mono<CommonModel.CommonPayload> requestOrAcceptFriend(@Argument FriendModel.AddFriendInput input) {
         return friendService.sendRequest(input);
     }
 
     @MutationMapping
-    FriendModel.AcceptOrRejectFriendPayload acceptOrRejectFriend(@Argument FriendModel.AcceptOrRejectFriendInput input) {
-        return FriendModel.AcceptOrRejectFriendPayload.builder()
-                .requestId(input.requestId())
-                .status(FriendModel.Status.COMPLETED)
-                .build();
+    Mono<CommonModel.CommonPayload> ignoreFriendRequest(@Argument String userId) {
+        return friendService.ignoreFriendRequest(userId);
     }
 }

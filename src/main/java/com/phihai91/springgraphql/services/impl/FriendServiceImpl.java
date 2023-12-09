@@ -138,4 +138,23 @@ public class FriendServiceImpl implements IFriendService {
                 // Add friend data to current User
                 .flatMap(currentUserFriendData -> friendRepository.save(currentUserFriendData));
     }
+
+    @Override
+    @PreAuthorize("hasRole('USER')")
+    public Mono<CommonModel.CommonPayload> ignoreFriendRequest(String userId) {
+        var rejectSuccessRes = CommonModel.CommonPayload.builder()
+                .status(CommonModel.CommonStatus.SUCCESS)
+                .message("Ignore Success")
+                .build();
+
+        // Get current user data
+        Mono<AppUserDetails> currentUser = ReactiveSecurityContextHolder.getContext()
+                .map(UserHelper::getUserDetails);
+
+        return currentUser
+                .flatMap(u -> friendRequestRepository.findFirstByFromUserEqualsAndToUserEquals(userId, u.getId())
+                        .switchIfEmpty(Mono.error(new NotFoundException("Request not found"))))
+                .flatMap(friendRequest -> friendRequestRepository.save(friendRequest.withIsIgnore(true)))
+                .then(Mono.just(rejectSuccessRes));
+    }
 }

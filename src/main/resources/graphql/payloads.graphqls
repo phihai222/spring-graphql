@@ -10,11 +10,6 @@ type SetTwoMFPayload {
     otp: String!
 }
 
-type AcceptOrRejectFriendPayload {
-    requestId: ID!
-    status: Status,
-}
-
 type LikePostPayload {
     id: ID!
     liked: Boolean
