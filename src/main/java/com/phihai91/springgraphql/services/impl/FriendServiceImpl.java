@@ -46,29 +46,28 @@ public class FriendServiceImpl implements IFriendService {
         Mono<User> targetUser = userRepository.findById(input.userId())
                 .switchIfEmpty(Mono.error(new NotFoundException("User not found")));
 
-        var alreadyFriend = CommonModel.CommonPayload.builder()
-                .status(CommonModel.CommonStatus.FAILED)
-                .message("Already friend")
-                .build();
-
         return currentUser
                 // Check request to themselves
                 .flatMap(appUserDetails -> appUserDetails.getId().equals(input.userId()) ?
                         Mono.error(new BadRequestException("Cannot request to yourself")) : Mono.just(appUserDetails))
+                // Check already friend or not
+                .flatMap(appUserDetails -> checkIsAlreadyFriend(appUserDetails.getId(), input.userId())
+                        .flatMap(aBoolean -> aBoolean ?
+                                Mono.error(new BadRequestException("Already Friend")) : Mono.just(appUserDetails)))
                 .zipWith(targetUser, (appUserDetails, user) ->
-                        checkIsAlreadyFriend() ? Mono.just(alreadyFriend) :
-                                // Find request existed or not
-                                friendRequestRepository.findFirstByFromUserEqualsAndToUserEquals(appUserDetails.getId(), user.id())
-                                        // Withdraw request by delete
-                                        .flatMap(this::deleteFriendRequest)
-                                        // If not existed, create a new request
-                                        .switchIfEmpty(saveFriendRequestOrAccept(input, appUserDetails)))
+                        // Find request existed or not
+                        friendRequestRepository.findFirstByFromUserEqualsAndToUserEquals(appUserDetails.getId(), user.id())
+                                // Withdraw request by delete
+                                .flatMap(this::deleteFriendRequest)
+                                // If not existed, create a new request
+                                .switchIfEmpty(saveFriendRequestOrAccept(input, appUserDetails)))
                 .flatMap(Function.identity()); // Convert Mono<Mono<T>> to Mono<T>
     }
 
-    private Boolean checkIsAlreadyFriend() {
-        // TODO check both are friend or not
-        return false;
+    private Mono<Boolean> checkIsAlreadyFriend(String currentUserId, String targetUserId) {
+        return friendRepository.findById(currentUserId)
+                .map(friendData -> friendData.friends().contains(targetUserId))
+                .switchIfEmpty(Mono.just(false));
     }
 
     private Mono<CommonModel.CommonPayload> saveFriendRequestOrAccept(FriendModel.AddFriendInput input, AppUserDetails appUserDetails) {
