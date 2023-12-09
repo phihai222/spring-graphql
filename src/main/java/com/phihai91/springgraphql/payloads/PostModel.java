@@ -32,6 +32,7 @@ public class PostModel {
             String userId,
             Visibility visibility,
             List<String> photoUrl,
-            List<CommentModel.Comment> comments
+            List<CommentModel.Comment> comments,
+            LocalDateTime createdDate
     ) {}
 }

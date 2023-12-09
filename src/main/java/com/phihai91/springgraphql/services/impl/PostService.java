@@ -77,15 +77,15 @@ public class PostService implements IPostService {
 
     @Override
     @PreAuthorize("hasRole('USER')")
-    public Mono<Connection<Post>> getMyPosts(int first, String cursor) {
+    public Mono<Connection<PostModel.Post>> getMyPosts(int first, String cursor) {
         Mono<AppUserDetails> appUserDetailsMono = ReactiveSecurityContextHolder.getContext()
                 .map(UserHelper::getUserDetails);
 
         return appUserDetailsMono
                 .flatMap(appUserDetails ->
-                    getPost(appUserDetails.getId(), first, cursor)
-                        .map(post -> (Edge<Post>) new DefaultEdge<>(post, cursorUtils.from(post.id())))
-                        .collect(Collectors.toUnmodifiableList()))
+                        getPost(appUserDetails.getId(), first, cursor)
+                                .map(post -> (Edge<PostModel.Post>) new DefaultEdge<>(post, cursorUtils.from(post.id())))
+                                .collect(Collectors.toUnmodifiableList()))
                 .map(edges -> {
                     DefaultPageInfo pageInfo = new DefaultPageInfo(
                             cursorUtils.getFirstCursorFrom(edges),
@@ -117,8 +117,8 @@ public class PostService implements IPostService {
                         .build()));
     }
 
-    private Flux<Post> getPost(String userId, int first, String cursor) {
-        return cursor == null ? postRepository.findAllByUserIdStart(userId, first)
-                : postRepository.findAllByUserIdBefore(userId, cursor, first);
+    private Flux<PostModel.Post> getPost(String userId, int first, String cursor) {
+        return cursor == null ? postRepository.findAllByUserIdStart(userId, first).map(Post::toPostPayload)
+                : postRepository.findAllByUserIdBefore(userId, cursor, first).map(Post::toPostPayload);
     }
 }

@@ -1,6 +1,5 @@
 package com.phihai91.springgraphql.controllers;
 
-import com.phihai91.springgraphql.entities.Post;
 import com.phihai91.springgraphql.payloads.CommonModel;
 import com.phihai91.springgraphql.payloads.PostModel;
 import com.phihai91.springgraphql.services.IPostService;
@@ -25,7 +24,7 @@ public class PostController {
     }
 
     @QueryMapping
-    Mono<Connection<Post>> getMyPosts(
+    Mono<Connection<PostModel.Post>> getMyPosts(
             @Argument Integer first,
             @Argument String after
     ) {

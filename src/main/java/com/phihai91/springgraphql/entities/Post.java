@@ -27,20 +27,33 @@ public record Post(
         List<Comment> comments,
         List<Like> likes
 ) {
-        public PostModel.CreatePostPayload toCreatePostPayload() {
-                return PostModel.CreatePostPayload.builder()
+    public PostModel.CreatePostPayload toCreatePostPayload() {
+        return PostModel.CreatePostPayload.builder()
+                .id(id)
+                .visibility(visibility)
+                .post(PostModel.Post.builder()
                         .id(id)
+                        .firstName(userInfo == null ? null : userInfo.firstName())
+                        .lastName(userInfo == null ? null : userInfo.lastName())
+                        .photoUrl(photoUrls)
+                        .content(content)
                         .visibility(visibility)
-                        .post(PostModel.Post.builder()
-                                .id(id)
-                                .firstName(userInfo == null ? null : userInfo.firstName())
-                                .lastName(userInfo == null ? null : userInfo.lastName())
-                                .photoUrl(photoUrls)
-                                .content(content)
-                                .visibility(visibility)
-                                .userId(userId)
-                                .build())
+                        .userId(userId)
                         .createdDate(createdDate)
-                        .build();
-        }
+                        .build())
+                .build();
+    }
+
+    public PostModel.Post toPostPayload() {
+        return PostModel.Post.builder()
+                .id(id)
+                .firstName(userInfo == null ? null : userInfo.firstName())
+                .lastName(userInfo == null ? null : userInfo.lastName())
+                .photoUrl(photoUrls)
+                .content(content)
+                .visibility(visibility)
+                .userId(userId)
+                .createdDate(createdDate)
+                .build();
+    }
 }
