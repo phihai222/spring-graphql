@@ -7,8 +7,11 @@ type Query {
     getMyPosts(first: Int!,after: String): PostConnection
     getCommentByPostId(postId: String!, first: Int!,after: String): CommentConnection
 
+#    Friend
+    getMyFriendRequest: FriendRequestConnection #TODO implement
+
 #    Other
-    search(word: String!): SearchResultPayload
+    search(word: String!): SearchResultPayload #TODO implement
 }
 
 type Mutation {

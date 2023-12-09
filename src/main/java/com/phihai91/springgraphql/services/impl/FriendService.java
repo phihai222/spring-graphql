@@ -25,7 +25,7 @@ import java.util.function.Function;
 
 @Service
 @Slf4j
-public class FriendServiceImpl implements IFriendService {
+public class FriendService implements IFriendService {
     @Autowired
     private IUserRepository userRepository;
 

@@ -27,6 +27,13 @@ type Post {
     userId: String
 }
 
+type FriendRequest {
+    id: ID!,
+    fromUser: String!
+    toUser: String!
+    createdDate: String,
+}
+
 enum Status {
     COMPLETED
 }
