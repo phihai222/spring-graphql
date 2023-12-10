@@ -12,16 +12,20 @@ import com.phihai91.springgraphql.repositories.IFriendRequestRepository;
 import com.phihai91.springgraphql.repositories.IUserRepository;
 import com.phihai91.springgraphql.securities.AppUserDetails;
 import com.phihai91.springgraphql.services.IFriendService;
+import com.phihai91.springgraphql.ultis.CursorUtils;
 import com.phihai91.springgraphql.ultis.UserHelper;
+import graphql.relay.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -34,6 +38,9 @@ public class FriendService implements IFriendService {
 
     @Autowired
     private IFriendRepository friendRepository;
+
+    @Autowired
+    private CursorUtils cursorUtils;
 
     @Override
     @PreAuthorize("hasRole('USER')")
@@ -93,6 +100,7 @@ public class FriendService implements IFriendService {
                         .message(input.message())
                         .fromUser(appUserDetails.getId())
                         .toUser(input.userId())
+                        .isIgnore(false)
                         .build()).map(friendRequest -> successRes));
     }
 
@@ -156,5 +164,31 @@ public class FriendService implements IFriendService {
                         .switchIfEmpty(Mono.error(new NotFoundException("Request not found"))))
                 .flatMap(friendRequest -> friendRequestRepository.save(friendRequest.withIsIgnore(true)))
                 .then(Mono.just(rejectSuccessRes));
+    }
+
+    @Override
+    public Mono<Connection<FriendModel.FriendRequest>> getFriendRequest(Integer first, String cursor) {
+        Mono<AppUserDetails> appUserDetailsMono = ReactiveSecurityContextHolder.getContext()
+                .map(UserHelper::getUserDetails);
+
+        return appUserDetailsMono
+                .flatMap(appUserDetails ->
+                        getFriendRequest(appUserDetails.getId(), first, cursor)
+                                .map(fr -> (Edge<FriendModel.FriendRequest>) new DefaultEdge<>(fr, cursorUtils.from(fr.id())))
+                                .collect(Collectors.toUnmodifiableList()))
+                .map(edges -> {
+                    DefaultPageInfo pageInfo = new DefaultPageInfo(
+                            cursorUtils.getFirstCursorFrom(edges),
+                            cursorUtils.getLastCursorFrom(edges),
+                            cursor != null,
+                            edges.size() >= first);
+
+                    return new DefaultConnection<>(edges, pageInfo);
+                });
+    }
+
+    private Flux<FriendModel.FriendRequest> getFriendRequest(String userId, int first, String cursor) {
+        return cursor == null ? friendRequestRepository.findAllByUserIdStart(userId, first).map(FriendRequest::toFriendRequestPayload)
+                : friendRequestRepository.findAllByUserIdBefore(userId, cursor, first).map(FriendRequest::toFriendRequestPayload);
     }
 }

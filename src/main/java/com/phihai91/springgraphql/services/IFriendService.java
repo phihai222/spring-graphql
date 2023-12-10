@@ -3,6 +3,7 @@ package com.phihai91.springgraphql.services;
 import com.phihai91.springgraphql.entities.Friend;
 import com.phihai91.springgraphql.payloads.CommonModel;
 import com.phihai91.springgraphql.payloads.FriendModel;
+import graphql.relay.Connection;
 import reactor.core.publisher.Mono;
 
 public interface IFriendService {
@@ -11,4 +12,6 @@ public interface IFriendService {
     Mono<Friend> updateFriendData(String userId, String friendId);
 
     Mono<CommonModel.CommonPayload> ignoreFriendRequest(String userId);
+
+    Mono<Connection<FriendModel.FriendRequest>> getFriendRequest(Integer first, String after);
 }

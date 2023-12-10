@@ -31,6 +31,7 @@ type FriendRequest {
     id: ID!,
     fromUser: String!
     toUser: String!
+    message: String
     createdDate: String,
 }
 

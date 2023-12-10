@@ -8,7 +8,7 @@ type Query {
     getCommentByPostId(postId: String!, first: Int!,after: String): CommentConnection
 
 #    Friend
-    getMyFriendRequest: FriendRequestConnection #TODO implement
+    getMyFriendRequest(first: Int!,after: String): FriendRequestConnection
 
 #    Other
     search(word: String!): SearchResultPayload #TODO implement

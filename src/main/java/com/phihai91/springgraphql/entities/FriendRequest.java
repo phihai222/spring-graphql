@@ -1,5 +1,6 @@
 package com.phihai91.springgraphql.entities;
 
+import com.phihai91.springgraphql.payloads.FriendModel;
 import lombok.Builder;
 import lombok.With;
 import org.springframework.data.annotation.CreatedDate;
@@ -23,4 +24,13 @@ public record FriendRequest(
         LocalDateTime createdDate,
         @LastModifiedDate
         LocalDateTime updatedDate
-        ) {}
+) {
+    public FriendModel.FriendRequest toFriendRequestPayload() {
+        return FriendModel.FriendRequest.builder()
+                .id(id)
+                .toUser(toUser)
+                .fromUser(fromUser)
+                .message(message)
+                .build();
+    }
+}
