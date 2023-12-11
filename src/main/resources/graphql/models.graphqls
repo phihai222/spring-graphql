@@ -35,6 +35,14 @@ type FriendRequest {
     createdDate: String,
 }
 
+type Friend {
+    id: ID!
+    firstName: String
+    lastName: String
+    avatarUrl: String
+    addedDate: String
+}
+
 enum Status {
     COMPLETED
 }

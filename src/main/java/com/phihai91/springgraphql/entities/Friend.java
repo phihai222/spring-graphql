@@ -13,6 +13,6 @@ import java.util.List;
 public record Friend(
         @Id
         String id,
-        List<String> friends
+        List<FriendData> friends
 ) {
 }

@@ -1,6 +1,7 @@
 package com.phihai91.springgraphql.services.impl;
 
 import com.phihai91.springgraphql.entities.Friend;
+import com.phihai91.springgraphql.entities.FriendData;
 import com.phihai91.springgraphql.entities.FriendRequest;
 import com.phihai91.springgraphql.entities.User;
 import com.phihai91.springgraphql.exceptions.BadRequestException;
@@ -23,6 +24,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -73,7 +75,9 @@ public class FriendService implements IFriendService {
 
     private Mono<Boolean> checkIsAlreadyFriend(String currentUserId, String targetUserId) {
         return friendRepository.findById(currentUserId)
-                .map(friendData -> friendData.friends().contains(targetUserId))
+                .map(friendData -> friendData.friends().stream()
+                        .anyMatch(f -> f.id().contains(targetUserId))
+                )
                 .switchIfEmpty(Mono.just(false));
     }
 
@@ -133,11 +137,11 @@ public class FriendService implements IFriendService {
         return currentFriendData.zipWith(targetFriendData, (current, target) -> {
                     // Add friend data to current User
                     var currentFriendList = current.friends();
-                    currentFriendList.add(friendId);
+                    currentFriendList.add(FriendData.builder().id(friendId).addedDate(LocalDateTime.now()).build());
 
                     //add friend data to target user
                     var targetFriendList = target.friends();
-                    targetFriendList.add(userId);
+                    targetFriendList.add(FriendData.builder().id(userId).addedDate(LocalDateTime.now()).build());
 
                     return friendRepository.save(target.withFriends(targetFriendList))
                             .map(targetUserFriend -> current.withFriends(currentFriendList));
