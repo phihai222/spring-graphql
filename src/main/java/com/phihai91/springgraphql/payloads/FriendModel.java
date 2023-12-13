@@ -1,4 +1,5 @@
 package com.phihai91.springgraphql.payloads;
+
 import lombok.Builder;
 import lombok.With;
 
@@ -11,6 +12,7 @@ public class FriendModel {
             String message
     ) {
     }
+
     @Builder
     @With
     public record FriendRequest(
@@ -20,6 +22,14 @@ public class FriendModel {
             String message,
             LocalDateTime createdDate
 
+    ) {
+    }
+
+    @Builder
+    public record Friend(
+            String id,
+            UserModel.User info,
+            LocalDateTime addedDate
     ) {
     }
 }

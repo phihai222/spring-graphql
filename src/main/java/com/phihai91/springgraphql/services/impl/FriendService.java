@@ -191,8 +191,35 @@ public class FriendService implements IFriendService {
                 });
     }
 
+    @Override
+    public Mono<Connection<FriendModel.Friend>> getFriendList(Integer first, String cursor) {
+        Mono<AppUserDetails> appUserDetailsMono = ReactiveSecurityContextHolder.getContext()
+                .map(UserHelper::getUserDetails);
+
+        return appUserDetailsMono
+                .flatMap(u -> getFriendList(u.getId(), first, cursor)
+                        .map(friend -> (Edge<FriendModel.Friend>) new DefaultEdge<>(friend, cursorUtils.from(friend.id())))
+                        .collect(Collectors.toUnmodifiableList()))
+                .map(edges -> {
+                    DefaultPageInfo pageInfo = new DefaultPageInfo(
+                            cursorUtils.getFirstCursorFrom(edges),
+                            cursorUtils.getLastCursorFrom(edges),
+                            cursor != null,
+                            edges.size() >= first);
+
+                    return new DefaultConnection<>(edges, pageInfo);
+                });
+
+
+    }
+
     private Flux<FriendModel.FriendRequest> getFriendRequest(String userId, int first, String cursor) {
         return cursor == null ? friendRequestRepository.findAllByUserIdStart(userId, first).map(FriendRequest::toFriendRequestPayload)
                 : friendRequestRepository.findAllByUserIdBefore(userId, cursor, first).map(FriendRequest::toFriendRequestPayload);
+    }
+
+    private Flux<FriendModel.Friend> getFriendList(String userId, int first, String cursor) {
+        return cursor == null ? friendRepository.findAllByUserIdStart(userId, first).map(Friend::toFriendPayload)
+                : friendRepository.findAllByUserIdBefore(userId, cursor, first).map(Friend::toFriendPayload);
     }
 }
