@@ -14,13 +14,13 @@ import java.util.List;
 public record Friend(
         @Id
         String id,
-        List<FriendData> friends
+        List<FriendData> friends,
+        FriendData friend
 ) {
-        public List<FriendModel.Friend> toFriendPayload() {
-                return friends().stream().map(friendData -> FriendModel.Friend.builder()
-                        .id(friendData.id())
-                        .addedDate(friendData.addedDate())
-                        .build())
-                        .toList();
+        public FriendModel.Friend toFriendPayload() {
+                return FriendModel.Friend.builder()
+                        .id(friend.id())
+                        .addedDate(friend.addedDate())
+                        .build();
         }
 }

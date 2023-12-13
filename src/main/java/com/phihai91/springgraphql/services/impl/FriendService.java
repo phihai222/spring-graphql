@@ -220,9 +220,6 @@ public class FriendService implements IFriendService {
 
     private Flux<FriendModel.Friend> getFriendList(String userId, int first, String cursor) {
         return cursor == null ? friendRepository.findAllByUserIdStart(userId, first).map(Friend::toFriendPayload)
-                .flatMap(Flux::fromIterable)
-                : friendRepository.findAllByUserIdBefore(userId, cursor, first).map(Friend::toFriendPayload)
-                .flatMap(Flux::fromIterable);
+                : friendRepository.findAllByUserIdBefore(userId, cursor, first).map(Friend::toFriendPayload);
     }
-
 }
