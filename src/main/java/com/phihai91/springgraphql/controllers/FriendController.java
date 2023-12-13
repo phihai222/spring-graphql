@@ -33,4 +33,12 @@ public class FriendController {
     ){
         return friendService.getFriendRequest(first, after);
     }
+
+    @QueryMapping
+    Mono<Connection<FriendModel.Friend>> getMyFriendList(
+            @Argument Integer first,
+            @Argument String after
+    ){
+        return friendService.getFriendList(first, after);
+    }
 }

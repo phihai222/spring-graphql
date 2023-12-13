@@ -1,5 +1,6 @@
 package com.phihai91.springgraphql.entities;
 
+import com.phihai91.springgraphql.payloads.FriendModel;
 import lombok.Builder;
 import lombok.With;
 import org.springframework.data.annotation.Id;
@@ -15,4 +16,11 @@ public record Friend(
         String id,
         List<FriendData> friends
 ) {
+        public List<FriendModel.Friend> toFriendPayload() {
+                return friends().stream().map(friendData -> FriendModel.Friend.builder()
+                        .id(friendData.id())
+                        .addedDate(friendData.addedDate())
+                        .build())
+                        .toList();
+        }
 }
