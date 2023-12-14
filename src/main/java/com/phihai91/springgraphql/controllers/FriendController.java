@@ -2,12 +2,14 @@ package com.phihai91.springgraphql.controllers;
 
 import com.phihai91.springgraphql.payloads.CommonModel;
 import com.phihai91.springgraphql.payloads.FriendModel;
+import com.phihai91.springgraphql.payloads.UserModel;
 import com.phihai91.springgraphql.services.IFriendService;
 import graphql.relay.Connection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
+import org.springframework.graphql.data.method.annotation.SchemaMapping;
 import org.springframework.stereotype.Controller;
 import reactor.core.publisher.Mono;
 
@@ -40,5 +42,18 @@ public class FriendController {
             @Argument String after
     ){
         return friendService.getFriendList(first, after);
+    }
+
+    // TODO change to @BatchMapping
+    @SchemaMapping
+    Mono<UserModel.User> info(FriendModel.Friend friend) {
+        // TODO query to database
+        return Mono.just(UserModel.User.builder()
+                .id(friend.id())
+                .email("email")
+                .avatarUrl("avatar")
+                .firstName("Hai")
+                .lastName("Nguyen")
+                .build());
     }
 }
