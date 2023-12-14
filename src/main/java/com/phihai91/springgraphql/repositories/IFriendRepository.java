@@ -10,16 +10,20 @@ import reactor.core.publisher.Flux;
 public interface IFriendRepository extends ReactiveMongoRepository<Friend, String> {
     @Aggregation(pipeline = {
             "{ '$match': { '_id' : new ObjectId(?0)}}", // Get friend data by userId
-            "{ '$project': {friend: { $slice: [\"$friends\", ?1] }}}", // limit nest object by slice, rename output field
-            "{ '$unwind': {path: \"$friend\"}}", // flat nest friend data.
+            "{ '$project': {friend: '$friends'}}", // Rename array
+            "{ '$unwind': {path: '$friend'}}", // flat nest friend data.
             "{ '$sort': {'friend.addedDate': -1}}", // sort output array
+            "{ '$limit': ?1}" // limit
     })
     Flux<Friend> findAllByUserIdStart(String userId, int first);
 
-    //TODO complete this query
     @Aggregation(pipeline = {
-            "{ '$match': { '_id' : new ObjectId(?0)}}",
-            "{ '$project': {friends: { $slice: [\"$friends\", ?1] }}}",
+            "{ '$match': { '_id' : new ObjectId(?0)}}", // Get friend data by userId
+            "{ '$project': {friend: '$friends'}}", // Rename array
+            "{ '$unwind': {path: '$friend'}}", // flat nest friend data.
+            "{ '$match': {'friend._id': {$lt: new ObjectId(?1)}}}",
+            "{ '$sort': {'friend.addedDate': -1}}", // sort output array
+            "{ '$limit': ?2}" // limit
     })
     Flux<Friend> findAllByUserIdBefore(String userId, String cursor, int first);
 }

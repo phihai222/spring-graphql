@@ -17,6 +17,7 @@ import com.phihai91.springgraphql.ultis.CursorUtils;
 import com.phihai91.springgraphql.ultis.UserHelper;
 import graphql.relay.*;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
@@ -76,7 +77,7 @@ public class FriendService implements IFriendService {
     private Mono<Boolean> checkIsAlreadyFriend(String currentUserId, String targetUserId) {
         return friendRepository.findById(currentUserId)
                 .map(friendData -> friendData.friends().stream()
-                        .anyMatch(f -> f.id().contains(targetUserId))
+                        .anyMatch(f -> f.userId().contains(targetUserId))
                 )
                 .switchIfEmpty(Mono.just(false));
     }
@@ -137,11 +138,17 @@ public class FriendService implements IFriendService {
         return currentFriendData.zipWith(targetFriendData, (current, target) -> {
                     // Add friend data to current User
                     var currentFriendList = current.friends();
-                    currentFriendList.add(FriendData.builder().id(friendId).addedDate(LocalDateTime.now()).build());
+                    currentFriendList.add(FriendData.builder()
+                            .id(new ObjectId().toString())
+                            .userId(friendId)
+                            .addedDate(LocalDateTime.now()).build());
 
                     //add friend data to target user
                     var targetFriendList = target.friends();
-                    targetFriendList.add(FriendData.builder().id(userId).addedDate(LocalDateTime.now()).build());
+                    targetFriendList.add(FriendData.builder()
+                            .id(new ObjectId().toString())
+                            .userId(userId)
+                            .addedDate(LocalDateTime.now()).build());
 
                     return friendRepository.save(target.withFriends(targetFriendList))
                             .map(targetUserFriend -> current.withFriends(currentFriendList));
