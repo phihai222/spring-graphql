@@ -19,7 +19,8 @@ public record Friend(
 ) {
         public FriendModel.Friend toFriendPayload() {
                 return FriendModel.Friend.builder()
-                        .id(friend.id())
+                        .id(friend.userId())
+                        .cursor(friend.id())
                         .addedDate(friend.addedDate())
                         .build();
         }

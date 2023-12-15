@@ -28,6 +28,7 @@ public class FriendModel {
     @Builder
     public record Friend(
             String id,
+            String cursor,
             UserModel.User info,
             LocalDateTime addedDate
     ) {

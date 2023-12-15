@@ -178,6 +178,7 @@ public class FriendService implements IFriendService {
     }
 
     @Override
+    @PreAuthorize("hasRole('USER')")
     public Mono<Connection<FriendModel.FriendRequest>> getFriendRequest(Integer first, String cursor) {
         Mono<AppUserDetails> appUserDetailsMono = ReactiveSecurityContextHolder.getContext()
                 .map(UserHelper::getUserDetails);
@@ -199,13 +200,14 @@ public class FriendService implements IFriendService {
     }
 
     @Override
+    @PreAuthorize("hasRole('USER')")
     public Mono<Connection<FriendModel.Friend>> getFriendList(Integer first, String cursor) {
         Mono<AppUserDetails> appUserDetailsMono = ReactiveSecurityContextHolder.getContext()
                 .map(UserHelper::getUserDetails);
 
         return appUserDetailsMono
                 .flatMap(u -> getFriendList(u.getId(), first, cursor)
-                        .map(friend -> (Edge<FriendModel.Friend>) new DefaultEdge<>(friend, cursorUtils.from(friend.id())))
+                        .map(friend -> (Edge<FriendModel.Friend>) new DefaultEdge<>(friend, cursorUtils.from(friend.cursor())))
                         .collect(Collectors.toUnmodifiableList()))
                 .map(edges -> {
                     DefaultPageInfo pageInfo = new DefaultPageInfo(

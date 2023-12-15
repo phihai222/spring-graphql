@@ -10,4 +10,6 @@ public interface IUserService {
     Mono<UserModel.SetTwoMFAPayload> setTwoMFA();
     Mono<CommonModel.CommonPayload> verifyTwoMFOtp(String otp);
     Mono<UserModel.User> getUserByUsername(String username);
+
+    Mono<UserModel.User> getUserById(String id);
 }

@@ -137,4 +137,15 @@ public class UserService implements IUserService {
                 .avatarUrl(u.userInfo().avatarUrl())
                 .build());
     }
+
+    @Override
+    public Mono<UserModel.User> getUserById(String id) {
+        return userRepository.findById(id)
+                .map(user -> UserModel.User.builder()
+                        .id(user.id())
+                        .firstName(user.userInfo().firstName())
+                        .lastName(user.userInfo().lastName())
+                        .username(user.username())
+                        .build());
+    }
 }

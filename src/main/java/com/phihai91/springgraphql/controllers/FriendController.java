@@ -4,6 +4,7 @@ import com.phihai91.springgraphql.payloads.CommonModel;
 import com.phihai91.springgraphql.payloads.FriendModel;
 import com.phihai91.springgraphql.payloads.UserModel;
 import com.phihai91.springgraphql.services.IFriendService;
+import com.phihai91.springgraphql.services.IUserService;
 import graphql.relay.Connection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.graphql.data.method.annotation.Argument;
@@ -17,6 +18,9 @@ import reactor.core.publisher.Mono;
 public class FriendController {
     @Autowired
     private IFriendService friendService;
+
+    @Autowired
+    private IUserService userService;
 
     @MutationMapping
     Mono<CommonModel.CommonPayload> requestOrAcceptFriend(@Argument FriendModel.AddFriendInput input) {
@@ -47,13 +51,6 @@ public class FriendController {
     // TODO change to @BatchMapping
     @SchemaMapping
     Mono<UserModel.User> info(FriendModel.Friend friend) {
-        // TODO query to database
-        return Mono.just(UserModel.User.builder()
-                .id(friend.id())
-                .email("email")
-                .avatarUrl("avatar")
-                .firstName("Hai")
-                .lastName("Nguyen")
-                .build());
+        return userService.getUserById(friend.id());
     }
 }
