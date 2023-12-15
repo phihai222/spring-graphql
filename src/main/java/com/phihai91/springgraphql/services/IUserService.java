@@ -2,7 +2,10 @@ package com.phihai91.springgraphql.services;
 
 import com.phihai91.springgraphql.payloads.CommonModel;
 import com.phihai91.springgraphql.payloads.UserModel;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import java.util.List;
 
 public interface IUserService {
     Mono<UserModel.User> getCurrentUserInfo();
@@ -10,6 +13,5 @@ public interface IUserService {
     Mono<UserModel.SetTwoMFAPayload> setTwoMFA();
     Mono<CommonModel.CommonPayload> verifyTwoMFOtp(String otp);
     Mono<UserModel.User> getUserByUsername(String username);
-
-    Mono<UserModel.User> getUserById(String id);
+    Flux<UserModel.User> getAllUserByIds(List<String> ids);
 }

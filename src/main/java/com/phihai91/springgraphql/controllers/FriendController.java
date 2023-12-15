@@ -6,15 +6,17 @@ import com.phihai91.springgraphql.payloads.UserModel;
 import com.phihai91.springgraphql.services.IFriendService;
 import com.phihai91.springgraphql.services.IUserService;
 import graphql.relay.Connection;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.graphql.data.method.annotation.Argument;
-import org.springframework.graphql.data.method.annotation.MutationMapping;
-import org.springframework.graphql.data.method.annotation.QueryMapping;
-import org.springframework.graphql.data.method.annotation.SchemaMapping;
+import org.springframework.graphql.data.method.annotation.*;
 import org.springframework.stereotype.Controller;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 @Controller
+@Slf4j
 public class FriendController {
     @Autowired
     private IFriendService friendService;
@@ -36,7 +38,7 @@ public class FriendController {
     Mono<Connection<FriendModel.FriendRequest>> getMyFriendRequest(
             @Argument Integer first,
             @Argument String after
-    ){
+    ) {
         return friendService.getFriendRequest(first, after);
     }
 
@@ -44,13 +46,18 @@ public class FriendController {
     Mono<Connection<FriendModel.Friend>> getMyFriendList(
             @Argument Integer first,
             @Argument String after
-    ){
+    ) {
         return friendService.getFriendList(first, after);
     }
 
-    // TODO change to @BatchMapping
-    @SchemaMapping
-    Mono<UserModel.User> info(FriendModel.Friend friend) {
-        return userService.getUserById(friend.id());
+    @BatchMapping
+    Flux<UserModel.User> info(List<FriendModel.Friend> friend) {
+        List<String> ids = friend
+                .stream()
+                .map(FriendModel.Friend::id)
+                .sorted() // Make sure order is the same
+                .toList();
+
+        return userService.getAllUserByIds(ids);
     }
 }

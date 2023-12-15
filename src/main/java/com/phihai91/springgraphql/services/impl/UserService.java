@@ -15,10 +15,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.time.ZoneId;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -139,8 +141,8 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public Mono<UserModel.User> getUserById(String id) {
-        return userRepository.findById(id)
+    public Flux<UserModel.User> getAllUserByIds(List<String> ids) {
+        return userRepository.findAllByIdInAndOrderById(ids)
                 .map(user -> UserModel.User.builder()
                         .id(user.id())
                         .firstName(user.userInfo().firstName())
