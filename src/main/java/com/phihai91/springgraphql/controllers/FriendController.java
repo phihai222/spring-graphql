@@ -60,4 +60,9 @@ public class FriendController {
 
         return userService.getAllUserByIds(ids);
     }
+
+    @MutationMapping
+    Mono<CommonModel.CommonPayload> unfriend(@Argument String userId) {
+        return friendService.unfriend(userId);
+    }
 }

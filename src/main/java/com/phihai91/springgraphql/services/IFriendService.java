@@ -16,4 +16,6 @@ public interface IFriendService {
     Mono<Connection<FriendModel.FriendRequest>> getFriendRequest(Integer first, String after);
 
     Mono<Connection<FriendModel.Friend>> getFriendList(Integer first, String after);
+
+    Mono<CommonModel.CommonPayload> unfriend(String userId);
 }
