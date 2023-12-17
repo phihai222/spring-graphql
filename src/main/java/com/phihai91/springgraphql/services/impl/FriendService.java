@@ -24,6 +24,8 @@ import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+import reactor.util.function.Tuples;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -224,35 +226,44 @@ public class FriendService implements IFriendService {
 
     @Override
     @PreAuthorize("hasRole('USER')")
-    public Mono<CommonModel.CommonPayload> unfriend(String userId) {
+    public Mono<CommonModel.CommonPayload> unfriend(String targetUserId) {
         Mono<AppUserDetails> appUserDetailsMono = ReactiveSecurityContextHolder.getContext()
                 .map(UserHelper::getUserDetails);
 
-        Mono<User> targetUser = userRepository.findById(userId)
+        Mono<User> targetUser = userRepository.findById(targetUserId)
                 .switchIfEmpty(Mono.error(new NotFoundException("User not existed")));
 
-        Mono<Friend> friendData = appUserDetailsMono.zipWith(targetUser, (appUserDetails, user) ->
-                // Find friend data of current user
-                friendRepository.findById(appUserDetails.getId())
-                        // Check target user existed on friend list or not
-                        .flatMap(friend -> friend.friends().stream().anyMatch(f -> f.userId().equals(userId))
-                                // Return Friend data if existed or throw error.
-                                ? Mono.just(friend) : Mono.error(new NotFoundException("This user is not your friend before"))))
+        Mono<Friend> currentUserFriendData = appUserDetailsMono.zipWith(targetUser, (appUserDetails, user) ->
+                        // Find friend data of current user
+                        friendRepository.findById(appUserDetails.getId())
+                                // Check target user existed on friend list or not
+                                .flatMap(friend -> friend.friends().stream().anyMatch(f -> f.userId().equals(targetUserId))
+                                        // Return Friend data if existed or throw error.
+                                        ? Mono.just(friend) : Mono.error(new NotFoundException("This user is not your friend before"))))
                 // If Friend data is not existed, throw the exception.
                 .switchIfEmpty(Mono.error(new NotFoundException("Your friend list is empty")))
                 // Convert Mono<Mono<T>> to Mono<T> because use zip-with
                 .flatMap(Function.identity());
 
-        return friendData.flatMap(friend -> {
-            // Filter friend exclude target userId
-            var newFriendList = friend.friends().stream().filter(f -> !f.userId().equals(userId)).toList();
-            // Replace Friend Data with new friendList
-            return friendRepository.save(friend.withFriends(newFriendList));
-        }) //TODO Change friend data of target user
-        .map(friend ->  CommonModel.CommonPayload.builder()
-                .status(CommonModel.CommonStatus.SUCCESS)
-                .message("Unfriend successfully")
-                .build());
+        Mono<Friend> targetUserFriendData = friendRepository.findById(targetUserId);
+
+        return currentUserFriendData.zipWith(targetUserFriendData, Tuples::of)
+                .flatMap(tuples -> Mono.when(
+                        // Remove targetUserId of current user's friend list
+                        removeUserIdFromFriendList(targetUserId, tuples.getT1()),
+                        // Remove currentUserId of target user's friend list
+                        removeUserIdFromFriendList(tuples.getT1().id(), tuples.getT2())))
+                .then(Mono.just(CommonModel.CommonPayload.builder()
+                        .status(CommonModel.CommonStatus.SUCCESS)
+                        .message("Unfriend successfully")
+                        .build()));
+    }
+
+    private Mono<Friend> removeUserIdFromFriendList(String userId, Friend friend) {
+        // Filter friend exclude target userId
+        var newFriendList = friend.friends().stream().filter(f -> !f.userId().equals(userId)).toList();
+        // Replace Friend Data with new friendList
+        return friendRepository.save(friend.withFriends(newFriendList)).subscribeOn(Schedulers.parallel());
     }
 
     private Flux<FriendModel.FriendRequest> getFriendRequest(String userId, int first, String cursor) {
