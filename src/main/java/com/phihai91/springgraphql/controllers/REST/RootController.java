@@ -33,7 +33,7 @@ public class RootController {
     @GetMapping("/api/v1/test-reactive-flux")
     public Flux<PostModel.CreatePostPayload> getDelayResponse() {
         // Accept: text/event-stream
-        return postService.getMyPosts()
+        return postService.getPostsByUser()
                 .delayElements(Duration.ofSeconds(1));
     }
 
@@ -44,7 +44,7 @@ public class RootController {
         pageNumber = pageNumber == null ? 1 : pageNumber;
         pageSize = pageSize == null ? 10 : pageSize;
 
-        var result = postService.getMyPosts(PageRequest.of(
+        var result = postService.getPostsByUser(PageRequest.of(
                 pageNumber,
                 pageSize,
                 Sort.by(Sort.Direction.DESC, "createdDate")));
@@ -54,7 +54,7 @@ public class RootController {
 
     @GetMapping("/api/v1/test-background-tast")
     public Flux<PostModel.CreatePostPayload> getCurrentUserPost() {
-        return postService.getMyPosts()
+        return postService.getPostsByUser()
                 .publishOn(Schedulers.boundedElastic())
                 .doOnComplete(() -> Mono.just("Log after 5 second")
                         .delayElement(Duration.ofSeconds(5))

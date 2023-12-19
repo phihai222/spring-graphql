@@ -1,6 +1,7 @@
 package com.phihai91.springgraphql.services.impl;
 
 import com.phihai91.springgraphql.entities.Post;
+import com.phihai91.springgraphql.entities.User;
 import com.phihai91.springgraphql.entities.Visibility;
 import com.phihai91.springgraphql.exceptions.ForbiddenException;
 import com.phihai91.springgraphql.exceptions.NotFoundException;
@@ -55,7 +56,7 @@ public class PostService implements IPostService {
 
     @Override
     @PreAuthorize("hasRole('USER')")
-    public Flux<PostModel.CreatePostPayload> getMyPosts() {
+    public Flux<PostModel.CreatePostPayload> getPostsByUser() {
         return ReactiveSecurityContextHolder.getContext()
                 .map(UserHelper::getUserDetails)
                 .flatMap(appUserDetails -> postRepository.findAllByUserIdEquals(appUserDetails.getId()).collectList())
@@ -65,7 +66,7 @@ public class PostService implements IPostService {
 
     @Override
     @PreAuthorize("hasRole('USER')")
-    public Flux<PostModel.CreatePostPayload> getMyPosts(Pageable pageable) {
+    public Flux<PostModel.CreatePostPayload> getPostsByUser(Pageable pageable) {
         Mono<AppUserDetails> appUserDetailsMono = ReactiveSecurityContextHolder.getContext()
                 .map(UserHelper::getUserDetails);
 
@@ -77,9 +78,12 @@ public class PostService implements IPostService {
 
     @Override
     @PreAuthorize("hasRole('USER')")
-    public Mono<Connection<PostModel.Post>> getMyPosts(int first, String cursor) {
-        Mono<AppUserDetails> appUserDetailsMono = ReactiveSecurityContextHolder.getContext()
-                .map(UserHelper::getUserDetails);
+    public Mono<Connection<PostModel.Post>> getPostsByUser(String username, int first, String cursor) {
+        Mono<AppUserDetails> appUserDetailsMono = username == null ? ReactiveSecurityContextHolder.getContext()
+                .map(UserHelper::getUserDetails) : userRepository.findByUsernameEqualsOrEmailEquals(username, username)
+                .map(User::toAppUserDetails);
+
+        // TODO check is friend or visibility of post.
 
         return appUserDetailsMono
                 .flatMap(appUserDetails ->

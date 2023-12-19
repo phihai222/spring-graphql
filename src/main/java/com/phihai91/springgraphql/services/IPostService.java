@@ -10,8 +10,8 @@ import reactor.core.publisher.Mono;
 
 public interface IPostService {
     Mono<PostModel.CreatePostPayload> createPost(PostModel.CreatePostInput input);
-    Flux<PostModel.CreatePostPayload> getMyPosts();
-    Flux<PostModel.CreatePostPayload> getMyPosts(Pageable pageable);
-    Mono<Connection<PostModel.Post>> getMyPosts(int first, @Nullable String cursor);
+    Flux<PostModel.CreatePostPayload> getPostsByUser();
+    Flux<PostModel.CreatePostPayload> getPostsByUser(Pageable pageable);
+    Mono<Connection<PostModel.Post>> getPostsByUser(String userId, int first, @Nullable String cursor);
     Mono<CommonModel.CommonPayload> deletePost(String input);
 }

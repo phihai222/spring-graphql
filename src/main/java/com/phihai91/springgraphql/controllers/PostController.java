@@ -28,7 +28,16 @@ public class PostController {
             @Argument Integer first,
             @Argument String after
     ) {
-        return postService.getMyPosts(first, after);
+        return postService.getPostsByUser(null, first, after);
+    }
+
+    @QueryMapping
+    Mono<Connection<PostModel.Post>> getPostByUsername(
+            @Argument String username,
+            @Argument Integer first,
+            @Argument String after
+    ) {
+        return postService.getPostsByUser(username, first, after);
     }
 
     @MutationMapping
