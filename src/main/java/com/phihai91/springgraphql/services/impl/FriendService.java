@@ -76,7 +76,8 @@ public class FriendService implements IFriendService {
                 .flatMap(Function.identity()); // Convert Mono<Mono<T>> to Mono<T>
     }
 
-    private Mono<Boolean> checkIsAlreadyFriend(String currentUserId, String targetUserId) {
+    @Override
+    public Mono<Boolean> checkIsAlreadyFriend(String currentUserId, String targetUserId) {
         return friendRepository.findById(currentUserId)
                 .map(friendData -> friendData.friends().stream()
                         .anyMatch(f -> f.userId().contains(targetUserId))

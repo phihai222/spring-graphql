@@ -10,10 +10,12 @@ import com.phihai91.springgraphql.repositories.IPostRepository;
 import com.phihai91.springgraphql.repositories.IUserRepository;
 import com.phihai91.springgraphql.payloads.PostModel;
 import com.phihai91.springgraphql.securities.AppUserDetails;
+import com.phihai91.springgraphql.services.IFriendService;
 import com.phihai91.springgraphql.services.IPostService;
 import com.phihai91.springgraphql.ultis.CursorUtils;
 import com.phihai91.springgraphql.ultis.UserHelper;
 import graphql.relay.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -22,9 +24,11 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class PostService implements IPostService {
     @Autowired
     private IPostRepository postRepository;
@@ -34,6 +38,9 @@ public class PostService implements IPostService {
 
     @Autowired
     private IUserRepository userRepository;
+
+    @Autowired
+    private IFriendService friendService;
 
     @Override
     @PreAuthorize("hasRole('USER')")
@@ -79,17 +86,21 @@ public class PostService implements IPostService {
     @Override
     @PreAuthorize("hasRole('USER')")
     public Mono<Connection<PostModel.Post>> getPostsByUser(String username, int first, String cursor) {
-        Mono<AppUserDetails> appUserDetailsMono = username == null ? ReactiveSecurityContextHolder.getContext()
-                .map(UserHelper::getUserDetails) : userRepository.findByUsernameEqualsOrEmailEquals(username, username)
-                .map(User::toAppUserDetails);
+        Mono<AppUserDetails> currentUser = ReactiveSecurityContextHolder.getContext()
+                .map(UserHelper::getUserDetails);
 
-        // TODO check is friend or visibility of post.
+        Mono<AppUserDetails> targetUser = userRepository.findByUsernameEqualsOrEmailEquals(username, username)
+                .map(User::toAppUserDetails)
+                .switchIfEmpty(Mono.error(new NotFoundException("User not found")));
 
-        return appUserDetailsMono
-                .flatMap(appUserDetails ->
-                        getPost(appUserDetails.getId(), first, cursor)
-                                .map(post -> (Edge<PostModel.Post>) new DefaultEdge<>(post, cursorUtils.from(post.id())))
-                                .collect(Collectors.toUnmodifiableList()))
+        Mono<AppUserDetails> userToGetPosts = username == null ? currentUser : targetUser;
+
+        return userToGetPosts
+                // TODO check to get post from current user, it's never jump to current user
+                .flatMapMany(appUserDetails -> username == null ? getPost(appUserDetails.getId(), first, cursor)
+                        : getPostWithVisibility(appUserDetails.getId(), username, first, cursor))
+                .map(post -> (Edge<PostModel.Post>) new DefaultEdge<>(post, cursorUtils.from(post.id())))
+                .collect(Collectors.toUnmodifiableList())
                 .map(edges -> {
                     DefaultPageInfo pageInfo = new DefaultPageInfo(
                             cursorUtils.getFirstCursorFrom(edges),
@@ -122,7 +133,26 @@ public class PostService implements IPostService {
     }
 
     private Flux<PostModel.Post> getPost(String userId, int first, String cursor) {
+        log.info("Get posts by current user");
         return cursor == null ? postRepository.findAllByUserIdStart(userId, first).map(Post::toPostPayload)
                 : postRepository.findAllByUserIdBefore(userId, cursor, first).map(Post::toPostPayload);
+    }
+
+    private Flux<PostModel.Post> getPostWithVisibility(String userId, String username, int first, String cursor) {
+        log.info("Get post of user:: " + username);
+        // TODO Refactor this shit
+        Mono<User> targetUser = userRepository.findByUsernameEqualsOrEmailEquals(username, username).log();
+        return targetUser
+                .flatMap(target -> friendService.checkIsAlreadyFriend(userId,target.id()))
+                // TODO why isFriend always false ???
+                .flatMapMany(isFriend -> cursor == null ? postRepository.findAllByUserIdStartWithVisibility(
+                        userId,
+                        isFriend ? List.of(Visibility.FRIEND_ONLY, Visibility.PUBLIC) : List.of(Visibility.PUBLIC),
+                        first)
+                        : postRepository.findAllByUserIdBeforeWithVisibility(
+                        userId,
+                        isFriend ? List.of(Visibility.FRIEND_ONLY, Visibility.PUBLIC) : List.of(Visibility.PUBLIC),
+                        cursor, first))
+                .map(Post::toPostPayload);
     }
 }

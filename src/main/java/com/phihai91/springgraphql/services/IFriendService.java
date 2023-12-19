@@ -9,6 +9,8 @@ import reactor.core.publisher.Mono;
 public interface IFriendService {
     Mono<CommonModel.CommonPayload> sendRequest(FriendModel.AddFriendInput input);
 
+    Mono<Boolean> checkIsAlreadyFriend(String currentUserId, String targetUserId);
+
     Mono<Friend> updateFriendData(String userId, String friendId);
 
     Mono<CommonModel.CommonPayload> ignoreFriendRequest(String userId);
