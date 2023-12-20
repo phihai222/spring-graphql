@@ -89,16 +89,20 @@ public class PostService implements IPostService {
         Mono<AppUserDetails> currentUser = ReactiveSecurityContextHolder.getContext()
                 .map(UserHelper::getUserDetails);
 
-        Mono<AppUserDetails> targetUser = userRepository.findByUsernameEqualsOrEmailEquals(username, username)
+        // If user is null, return the current user.
+        Mono<AppUserDetails> targetUser = username == null ? currentUser : userRepository.findByUsernameEqualsOrEmailEquals(username, username)
                 .map(User::toAppUserDetails)
+                // If user not null, check user existed or not.
                 .switchIfEmpty(Mono.error(new NotFoundException("User not found")));
 
-        Mono<AppUserDetails> userToGetPosts = username == null ? currentUser : targetUser;
+        Flux<PostModel.Post> posts = currentUser.zipWith(targetUser, (u1, u2) ->
+                        // Detect user try to get themselves data or get from other user
+                        u1.getId().equals(u2.getId()) ? getPost(u1.getId(), first, cursor)
+                                : getPostWithVisibility(u1.getId(), u2.getId(), first, cursor))
+                // convert Mono<Flux<T> to Flux<T>
+                .flatMapMany(postFlux -> postFlux);
 
-        return userToGetPosts
-                // TODO check to get post from current user, it's never jump to current user
-                .flatMapMany(appUserDetails -> username == null ? getPost(appUserDetails.getId(), first, cursor)
-                        : getPostWithVisibility(appUserDetails.getId(), username, first, cursor))
+        return posts
                 .map(post -> (Edge<PostModel.Post>) new DefaultEdge<>(post, cursorUtils.from(post.id())))
                 .collect(Collectors.toUnmodifiableList())
                 .map(edges -> {
@@ -138,19 +142,21 @@ public class PostService implements IPostService {
                 : postRepository.findAllByUserIdBefore(userId, cursor, first).map(Post::toPostPayload);
     }
 
-    private Flux<PostModel.Post> getPostWithVisibility(String userId, String username, int first, String cursor) {
-        log.info("Get post of user:: " + username);
-        // TODO Refactor this shit
-        Mono<User> targetUser = userRepository.findByUsernameEqualsOrEmailEquals(username, username).log();
-        return targetUser
-                .flatMap(target -> friendService.checkIsAlreadyFriend(userId,target.id()))
-                // TODO why isFriend always false ???
-                .flatMapMany(isFriend -> cursor == null ? postRepository.findAllByUserIdStartWithVisibility(
-                        userId,
-                        isFriend ? List.of(Visibility.FRIEND_ONLY, Visibility.PUBLIC) : List.of(Visibility.PUBLIC),
-                        first)
+    private Flux<PostModel.Post> getPostWithVisibility(String userId, String friendId, int first, String cursor) {
+        log.info("Current user id:: " + userId);
+        log.info("Get post of user:: " + friendId);
+        // Check both user are already friend or not
+        return friendService.checkIsAlreadyFriend(userId, friendId)
+                .flatMapMany(isFriend -> cursor == null ?
+                        // If not define cursor, get from index 0
+                        postRepository.findAllByUserIdStartWithVisibility(
+                                friendId,
+                                // If already friend, get post share with public and friend. If not, public only
+                                isFriend ? List.of(Visibility.FRIEND_ONLY, Visibility.PUBLIC) : List.of(Visibility.PUBLIC),
+                                first)
                         : postRepository.findAllByUserIdBeforeWithVisibility(
-                        userId,
+                        friendId,
+                        // If already friend, get post share with public and friend. If not, public only
                         isFriend ? List.of(Visibility.FRIEND_ONLY, Visibility.PUBLIC) : List.of(Visibility.PUBLIC),
                         cursor, first))
                 .map(Post::toPostPayload);
