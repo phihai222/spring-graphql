@@ -1,8 +1,6 @@
 package com.phihai91.springgraphql.services.impl;
 
-import com.phihai91.springgraphql.entities.Post;
-import com.phihai91.springgraphql.entities.User;
-import com.phihai91.springgraphql.entities.Visibility;
+import com.phihai91.springgraphql.entities.*;
 import com.phihai91.springgraphql.exceptions.ForbiddenException;
 import com.phihai91.springgraphql.exceptions.NotFoundException;
 import com.phihai91.springgraphql.payloads.CommonModel;
@@ -102,18 +100,7 @@ public class PostService implements IPostService {
                 // convert Mono<Flux<T> to Flux<T>
                 .flatMapMany(postFlux -> postFlux);
 
-        return posts
-                .map(post -> (Edge<PostModel.Post>) new DefaultEdge<>(post, cursorUtils.from(post.id())))
-                .collect(Collectors.toUnmodifiableList())
-                .map(edges -> {
-                    DefaultPageInfo pageInfo = new DefaultPageInfo(
-                            cursorUtils.getFirstCursorFrom(edges),
-                            cursorUtils.getLastCursorFrom(edges),
-                            cursor != null,
-                            edges.size() >= first);
-
-                    return new DefaultConnection<>(edges, pageInfo);
-                });
+        return getPostConnection(first, cursor, posts);
     }
 
     @Override
@@ -136,15 +123,62 @@ public class PostService implements IPostService {
                         .build()));
     }
 
+    @Override
+    public Mono<Connection<PostModel.Post>> getPostTimeline(Integer first, String cursor) {
+        // Get Current User
+        Mono<AppUserDetails> appUserDetailsMono = ReactiveSecurityContextHolder.getContext()
+                .map(UserHelper::getUserDetails);
+
+        // Get Friend list
+        Mono<Friend> friendData = appUserDetailsMono.flatMap(u -> friendService.getFriendList(u.getId()));
+
+        // Get Post by list of ids
+        Flux<PostModel.Post> posts = friendData.flatMapMany(friend -> {
+            var friendList = friend.friends().stream()
+                    .map(FriendData::userId)
+                    .collect(Collectors.toList());
+            friendList.add(friend.id());
+            return getPostWithVisibility(friendList, first, cursor);
+        });
+
+        // Get Post by current user and friend's post with visibility property, order by date
+        return getPostConnection(first, cursor, posts);
+    }
+
+    private Mono<Connection<PostModel.Post>> getPostConnection(Integer first, String cursor, Flux<PostModel.Post> posts) {
+        return posts
+                .map(post -> (Edge<PostModel.Post>) new DefaultEdge<>(post, cursorUtils.from(post.id())))
+                .collect(Collectors.toUnmodifiableList())
+                .map(edges -> {
+                    DefaultPageInfo pageInfo = new DefaultPageInfo(
+                            cursorUtils.getFirstCursorFrom(edges),
+                            cursorUtils.getLastCursorFrom(edges),
+                            cursor != null,
+                            edges.size() >= first);
+
+                    return new DefaultConnection<>(edges, pageInfo);
+                });
+    }
+
     private Flux<PostModel.Post> getPost(String userId, int first, String cursor) {
         log.info("Get posts by current user");
         return cursor == null ? postRepository.findAllByUserIdStart(userId, first).map(Post::toPostPayload)
                 : postRepository.findAllByUserIdBefore(userId, cursor, first).map(Post::toPostPayload);
     }
 
+    private Flux<PostModel.Post> getPostWithVisibility(List<String> userId, int first, String cursor) {
+        log.info("Get Post from users:: " + userId.toString());
+        List<Visibility> visibilities = List.of(Visibility.FRIEND_ONLY, Visibility.PUBLIC);
+        return (cursor == null ? postRepository.findAllByUserIdsStartWithVisibility(userId, visibilities, first)
+                : postRepository.findAllByUserIdsBeforeWithVisibility(userId, visibilities, first, cursor))
+                .map(Post::toPostPayload);
+    }
+
     private Flux<PostModel.Post> getPostWithVisibility(String userId, String friendId, int first, String cursor) {
         log.info("Current user id:: " + userId);
         log.info("Get post of user:: " + friendId);
+        List<Visibility> visibilities = List.of(Visibility.FRIEND_ONLY, Visibility.PUBLIC);
+
         // Check both user are already friend or not
         return friendService.checkIsAlreadyFriend(userId, friendId)
                 .flatMapMany(isFriend -> cursor == null ?
@@ -152,12 +186,12 @@ public class PostService implements IPostService {
                         postRepository.findAllByUserIdStartWithVisibility(
                                 friendId,
                                 // If already friend, get post share with public and friend. If not, public only
-                                isFriend ? List.of(Visibility.FRIEND_ONLY, Visibility.PUBLIC) : List.of(Visibility.PUBLIC),
+                                isFriend ? visibilities : List.of(Visibility.PUBLIC),
                                 first)
                         : postRepository.findAllByUserIdBeforeWithVisibility(
                         friendId,
                         // If already friend, get post share with public and friend. If not, public only
-                        isFriend ? List.of(Visibility.FRIEND_ONLY, Visibility.PUBLIC) : List.of(Visibility.PUBLIC),
+                        isFriend ? visibilities : List.of(Visibility.PUBLIC),
                         cursor, first))
                 .map(Post::toPostPayload);
     }

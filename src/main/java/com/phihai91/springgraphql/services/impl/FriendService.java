@@ -260,6 +260,12 @@ public class FriendService implements IFriendService {
                         .build()));
     }
 
+    @Override
+    @PreAuthorize("hasRole('USER')")
+    public Mono<Friend> getFriendList(String userId) {
+        return friendRepository.findById(userId);
+    }
+
     private Mono<Friend> removeUserIdFromFriendList(String userId, Friend friend) {
         // Filter friend exclude target userId
         var newFriendList = friend.friends().stream().filter(f -> !f.userId().equals(userId)).toList();

@@ -44,4 +44,12 @@ public class PostController {
     Mono<CommonModel.CommonPayload> deletePost(@Argument String input){
         return postService.deletePost(input);
     }
+
+    @QueryMapping
+    Mono<Connection<PostModel.Post>> getPostTimeline (
+            @Argument Integer first,
+            @Argument String after
+    ) {
+        return postService.getPostTimeline(first, after);
+    }
 }

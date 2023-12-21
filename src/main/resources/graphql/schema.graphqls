@@ -7,6 +7,7 @@ type Query {
     getMyPosts(first: Int!,after: String): PostConnection
     getPostByUsername(username: String!,first: Int!,after: String): PostConnection
     getCommentByPostId(postId: String!, first: Int!,after: String): CommentConnection
+    getPostTimeline(first: Int!,after: String) : PostConnection
 
 #    Friend
     getMyFriendRequest(first: Int!,after: String): FriendRequestConnection

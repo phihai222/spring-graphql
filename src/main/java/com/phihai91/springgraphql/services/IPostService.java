@@ -14,4 +14,5 @@ public interface IPostService {
     Flux<PostModel.CreatePostPayload> getPostsByUser(Pageable pageable);
     Mono<Connection<PostModel.Post>> getPostsByUser(String userId, int first, @Nullable String cursor);
     Mono<CommonModel.CommonPayload> deletePost(String input);
+    Mono<Connection<PostModel.Post>> getPostTimeline(Integer first, String after);
 }

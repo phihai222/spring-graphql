@@ -44,4 +44,18 @@ public interface IPostRepository extends ReactiveMongoRepository<Post, String> {
             "{ '$limit': ?3 }"
     })
     Flux<Post> findAllByUserIdBeforeWithVisibility(String userId, List<Visibility> friendOnly, String cursor, int first);
+
+    @Aggregation(pipeline = {
+            "{ '$match': { 'userId' : {$in: ?0}, 'visibility' : {$in: ?1} }}",
+            "{ '$sort' : { 'createdDate' : -1 } }",
+            "{ '$limit': ?2 }"
+    })
+    Flux<Post> findAllByUserIdsStartWithVisibility(List<String> userId, List<Visibility> visibilities, int first);
+
+    @Aggregation(pipeline = {
+            "{ '$match': { 'userId' : {$in: ?0}, 'visibility' : {$in: ?1}, '_id': {$lt: new ObjectId(?3)}}}",
+            "{ '$sort' : { 'createdDate' : -1 } }",
+            "{ '$limit': ?2 }"
+    })
+    Flux<Post> findAllByUserIdsBeforeWithVisibility(List<String> userId, List<Visibility> visibilities, int first, String cursor);
 }
