@@ -11,7 +11,7 @@ type Query {
 
 #    Friend
     getMyFriendRequest(first: Int!,after: String): FriendRequestConnection
-    getMyFriendList(first: Int!, after: String) : FriendConnection #TODO implement
+    getMyFriendList(first: Int!, after: String) : FriendConnection
 
 #    Other
     search(word: String!): SearchResultPayload #TODO implement
