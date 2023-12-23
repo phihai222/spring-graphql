@@ -1,0 +1,44 @@
+spring:
+  graphql:
+    graphiql:
+      enabled: 'true'
+  data:
+    mongodb:
+      uri: mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@${MONGO_HOST}:27017
+      database: ${MONGO_DATABASE}
+
+logging:
+  level:
+    org:
+      springframework:
+        data:
+          mongodb:
+            core:
+              ReactiveMongoTemplate: DEBUG
+
+jwtSecret: ${JWT_SECRET}
+jwtExpirationMs: 6000000
+otpExpirationSeconds: 30000000
+maxSizeUpload: 2048000
+fileSrc: uploads
+
+#Healthcheck endpoint with details: actuator/health/custom
+management:
+  endpoint:
+    health:
+      group:
+        custom:
+          show-components: always
+          show-details: always
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    groups:
+      enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+
+server:
+  error:
+    include-message: always
