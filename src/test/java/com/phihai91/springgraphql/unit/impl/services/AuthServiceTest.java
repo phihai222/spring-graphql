@@ -1,6 +1,7 @@
 package com.phihai91.springgraphql.unit.impl.services;
 
 import com.phihai91.springgraphql.entities.User;
+import com.phihai91.springgraphql.exceptions.BadRequestException;
 import com.phihai91.springgraphql.payloads.AuthModel;
 import com.phihai91.springgraphql.repositories.IUserRepository;
 import com.phihai91.springgraphql.securities.AppUserDetails;
@@ -149,6 +150,54 @@ class AuthServiceTest {
     }
 
     @Test
-    public void verifyOtp() {
+    @DisplayName("Verify valid OTP")
+    public void verifyOtp_valid() {
+        AuthModel.VerifyOtpInput input = AuthModel.VerifyOtpInput.builder()
+                .otp("000000")
+                .userId(new ObjectId().toString())
+                .build();
+
+        when(this.userRepository.findById(anyString()))
+                .thenReturn(Mono.just(User.builder()
+                        .id(input.userId())
+                        .build()));
+
+        when(this.jwtTokenProvider.createToken(any()))
+                .thenReturn(AuthModel.VerifyOtpPayload.builder()
+                        .accessToken("accessToken")
+                        .build());
+
+        when(this.redisService.getOtp(any()))
+                .thenReturn(Mono.just("000000"));
+
+        when(this.redisService.removeOTP(any()))
+                .thenReturn(Mono.just(true));
+
+        var setup = authService.verifyOtp(input);
+
+        Predicate<AuthModel.VerifyOtpPayload> verifyOtpPayloadPredicate =
+                payload -> payload.accessToken() != null;
+
+        StepVerifier.create(setup)
+                .expectNextMatches(verifyOtpPayloadPredicate)
+                .verifyComplete();
     }
+    @Test
+    @DisplayName("Verify ivalid OTP")
+    public void verifyOtp_invalid() {
+        AuthModel.VerifyOtpInput input = AuthModel.VerifyOtpInput.builder()
+                .otp("000000")
+                .userId(new ObjectId().toString())
+                .build();
+
+        when(this.redisService.getOtp(any()))
+                .thenReturn(Mono.just("000001"));
+
+        var setup = authService.verifyOtp(input);
+
+        StepVerifier.create(setup)
+                .expectError(BadRequestException.class)
+                .verify();
+    }
+
 }
