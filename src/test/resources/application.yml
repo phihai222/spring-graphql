@@ -4,8 +4,8 @@ spring:
       enabled: 'true'
   data:
     mongodb:
-      uri: mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@${MONGO_HOST}:27017
-      database: ${MONGO_DATABASE}
+      uri: mongodb://root:admin@localhost:27017
+      database: social-network-integration-test
 
 logging:
   level:
@@ -16,7 +16,7 @@ logging:
             core:
               ReactiveMongoTemplate: DEBUG
 
-jwtSecret: ${JWT_SECRET}
+jwtSecret: rzxlszyykpbgqcflzxsqcysyhljh
 jwtExpirationMs: 6000000
 otpExpirationSeconds: 30000000
 maxSizeUpload: 2048000

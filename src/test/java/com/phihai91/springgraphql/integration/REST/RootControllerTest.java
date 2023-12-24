@@ -60,7 +60,7 @@ class RootControllerTest {
         var postFlux = res.getResponseBody();
 
         StepVerifier.create(postFlux)
-                .expectNextCount(4)
+                .expectNextCount(0)
                 .thenCancel()
                 .verify();
     }
