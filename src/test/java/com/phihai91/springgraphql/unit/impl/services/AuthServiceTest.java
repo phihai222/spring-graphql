@@ -23,6 +23,7 @@ import reactor.test.StepVerifier;
 import java.util.List;
 import java.util.function.Predicate;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -141,7 +142,10 @@ class AuthServiceTest {
     }
 
     @Test
+    @DisplayName("Get OTP")
     public void getOtp() {
+        var res = authService.getOtp();
+        assertEquals(res.length(), 6);
     }
 
     @Test

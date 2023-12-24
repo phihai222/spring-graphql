@@ -89,7 +89,7 @@ public class AuthService implements IAuthService {
                                     .userId(appUser.getId())
                                     .twoMFA(appUser.getTwoMFA())
                                     .sentTo(appUser.getTwoMFA() ? appUser.getEmail() : null)
-                                    .otp(appUser.getTwoMFA() ? getOtp(appUser) : null)
+                                    .otp(appUser.getTwoMFA() ? getOtp() : null)
                                     .build();
                         }))
                 .publishOn(Schedulers.boundedElastic())
@@ -101,7 +101,7 @@ public class AuthService implements IAuthService {
     }
 
     @Override
-    public String getOtp(AppUserDetails appUser) {
+    public String getOtp() {
         return new DecimalFormat("000000").format(new Random().nextInt(999999));
     }
 

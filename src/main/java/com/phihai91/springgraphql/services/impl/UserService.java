@@ -98,7 +98,7 @@ public class UserService implements IUserService {
                 .map(User::toAppUserDetails)
                 .map(appUserDetails -> UserModel.SetTwoMFAPayload.builder()
                         .userId(appUserDetails.getId())
-                        .otp(authService.getOtp(appUserDetails))
+                        .otp(authService.getOtp())
                         .sentTo(appUserDetails.getEmail())
                         .build())
                 .publishOn(Schedulers.boundedElastic())
