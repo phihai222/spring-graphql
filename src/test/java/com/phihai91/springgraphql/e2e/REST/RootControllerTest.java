@@ -1,4 +1,4 @@
-package com.phihai91.springgraphql.integration.REST;
+package com.phihai91.springgraphql.e2e.REST;
 
 import com.phihai91.springgraphql.entities.Role;
 import com.phihai91.springgraphql.entities.User;
