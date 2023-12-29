@@ -17,6 +17,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
@@ -119,6 +121,29 @@ public class PostServiceTest {
 
         // then
         var setup = postService.getPostsByUser();
+
+        Predicate<PostModel.CreatePostPayload> predicate = p ->
+                p.post().userId().equals(currentUserData.id());
+
+        StepVerifier.create(setup)
+                .expectNextMatches(predicate)
+                .verifyComplete();
+    }
+
+    @Test
+    public void give_currentUserIdAndPageAble_when_postExisted_returnPost() {
+        // given
+        PageRequest pageable = PageRequest.of(
+                1,
+                1,
+                Sort.by(Sort.Direction.DESC, "createdDate"));
+
+        // when
+        when(postRepository.findAllByUserId(anyString(), any()))
+                .thenReturn(Flux.just(postData));
+
+        // then
+        var setup = postService.getPostsByUser(pageable);
 
         Predicate<PostModel.CreatePostPayload> predicate = p ->
                 p.post().userId().equals(currentUserData.id());
