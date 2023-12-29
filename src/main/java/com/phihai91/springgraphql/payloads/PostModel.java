@@ -7,6 +7,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public class PostModel {
+
+    @Builder
     public record CreatePostInput(
             String content,
             List<String> photoUrls,
