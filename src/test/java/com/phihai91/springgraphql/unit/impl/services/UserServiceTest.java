@@ -4,6 +4,7 @@ import com.phihai91.springgraphql.entities.User;
 import com.phihai91.springgraphql.entities.UserInfo;
 import com.phihai91.springgraphql.exceptions.BadRequestException;
 import com.phihai91.springgraphql.exceptions.ForbiddenException;
+import com.phihai91.springgraphql.payloads.CommonModel;
 import com.phihai91.springgraphql.payloads.UserModel;
 import com.phihai91.springgraphql.repositories.IUserRepository;
 import com.phihai91.springgraphql.securities.AppUserDetails;
@@ -233,6 +234,46 @@ public class UserServiceTest {
                 res.otp().equals("000000") &&
                         res.userId().equals(currentUserData.id())
                         && res.sentTo().equals(currentUserData.email());
+
+        StepVerifier.create(setup)
+                .expectNextMatches(predicate)
+                .verifyComplete();
+    }
+
+    @Test
+    public void given_otp_when_invalid_returnError() {
+        // when
+        when(redisService.verifyOtp(anyString(), anyString()))
+                .thenReturn(Mono.just(false));
+
+        // then
+        var setup = userService.verifyTwoMFOtp("000000");
+
+        StepVerifier.create(setup)
+                .expectError(BadRequestException.class)
+                .verify();
+
+    }
+
+    @Test
+    public void given_otp_when_valid_returnResult() {
+        // when
+        when(redisService.verifyOtp(anyString(), anyString()))
+                .thenReturn(Mono.just(true));
+
+        when(userRepository.findById(anyString()))
+                .thenReturn(Mono.just(currentUserData));
+
+        when(redisService.removeOTP(anyString()))
+                .thenReturn(Mono.just(true));
+        when(userRepository.save(any()))
+                .thenReturn(Mono.just(currentUserData));
+
+        // then
+        var setup = userService.verifyTwoMFOtp("000000");
+
+        Predicate<CommonModel.CommonPayload> predicate = res ->
+                res.message().equals("Success");
 
         StepVerifier.create(setup)
                 .expectNextMatches(predicate)
