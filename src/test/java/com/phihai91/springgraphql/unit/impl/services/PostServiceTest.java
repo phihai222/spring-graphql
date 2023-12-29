@@ -9,7 +9,12 @@ import com.phihai91.springgraphql.repositories.IPostRepository;
 import com.phihai91.springgraphql.repositories.IUserRepository;
 import com.phihai91.springgraphql.securities.AppUserDetails;
 import com.phihai91.springgraphql.services.impl.PostService;
+import com.phihai91.springgraphql.ultis.CursorUtils;
 import com.phihai91.springgraphql.ultis.UserHelper;
+import graphql.relay.Connection;
+import graphql.relay.ConnectionCursor;
+import graphql.relay.DefaultConnectionCursor;
+import graphql.relay.DefaultEdge;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -27,12 +32,15 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.function.Predicate;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+
 
 @ExtendWith(MockitoExtension.class)
 public class PostServiceTest {
@@ -41,6 +49,9 @@ public class PostServiceTest {
 
     @Mock
     private IPostRepository postRepository;
+
+    @Mock
+    private CursorUtils cursorUtils;
 
     @Mock
     private IUserRepository userRepository;
@@ -147,6 +158,35 @@ public class PostServiceTest {
 
         Predicate<PostModel.CreatePostPayload> predicate = p ->
                 p.post().userId().equals(currentUserData.id());
+
+        StepVerifier.create(setup)
+                .expectNextMatches(predicate)
+                .verifyComplete();
+    }
+
+    @Test
+    public void given_nullUserId_when_logged_then_ReturnData() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        // when
+        when(postRepository.findAllByUserIdStart(anyString(),anyInt()))
+                .thenReturn(Flux.just(postData));
+
+        var edge = new DefaultEdge<>(postData, new DefaultConnectionCursor(postData.id()));
+
+        when(cursorUtils.from(anyString()))
+                .thenReturn(edge.getCursor());
+
+        when(cursorUtils.getFirstCursorFrom(any()))
+                .thenReturn(edge.getCursor());
+
+        when(cursorUtils.getLastCursorFrom(any()))
+                .thenReturn(edge.getCursor());
+
+        // then
+        var setup = postService.getPostsByUser(null, 1, null);
+
+        Predicate<Connection<PostModel.Post>> predicate = c ->
+                c.getPageInfo().isHasNextPage() &&
+                        c.getEdges().size() == 1;
 
         StepVerifier.create(setup)
                 .expectNextMatches(predicate)
