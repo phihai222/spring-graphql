@@ -3,6 +3,7 @@ package com.phihai91.springgraphql.services.impl;
 import com.phihai91.springgraphql.entities.User;
 import com.phihai91.springgraphql.exceptions.BadRequestException;
 import com.phihai91.springgraphql.exceptions.ForbiddenException;
+import com.phihai91.springgraphql.exceptions.NotFoundException;
 import com.phihai91.springgraphql.payloads.CommonModel;
 import com.phihai91.springgraphql.payloads.UserModel;
 import com.phihai91.springgraphql.repositories.IUserRepository;
@@ -129,7 +130,9 @@ public class UserService implements IUserService {
 
     @Override
     public Mono<UserModel.User> getUserByUsername(String username) {
-        Mono<User> result = userRepository.findByUsernameEqualsOrEmailEquals(username, username);
+        Mono<User> result = userRepository.findByUsernameEqualsOrEmailEquals(username, username)
+                .switchIfEmpty(Mono.error(new NotFoundException("User not found")));
+
         return result.map(u -> UserModel.User.builder()
                 .username(u.username())
                 .id(u.id())

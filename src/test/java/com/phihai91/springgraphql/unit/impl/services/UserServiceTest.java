@@ -4,6 +4,7 @@ import com.phihai91.springgraphql.entities.User;
 import com.phihai91.springgraphql.entities.UserInfo;
 import com.phihai91.springgraphql.exceptions.BadRequestException;
 import com.phihai91.springgraphql.exceptions.ForbiddenException;
+import com.phihai91.springgraphql.exceptions.NotFoundException;
 import com.phihai91.springgraphql.payloads.CommonModel;
 import com.phihai91.springgraphql.payloads.UserModel;
 import com.phihai91.springgraphql.repositories.IUserRepository;
@@ -274,6 +275,40 @@ public class UserServiceTest {
 
         Predicate<CommonModel.CommonPayload> predicate = res ->
                 res.message().equals("Success");
+
+        StepVerifier.create(setup)
+                .expectNextMatches(predicate)
+                .verifyComplete();
+    }
+
+    @Test
+    public void give_username_when_notfound_returnError() {
+        // given
+        String username = "NotFoundUsername";
+
+        // when
+        when(userRepository.findByUsernameEqualsOrEmailEquals(anyString(), anyString()))
+                .thenReturn(Mono.empty());
+
+        // then
+        var setup = userService.getUserByUsername(username);
+
+        StepVerifier.create(setup)
+                .expectError(NotFoundException.class)
+                .verify();
+    }
+
+    @Test
+    public void give_username_when_found_returnUserData() {
+        // when
+        when(userRepository.findByUsernameEqualsOrEmailEquals(anyString(), anyString()))
+                .thenReturn(Mono.just(currentUserData));
+
+        // then
+        var setup = userService.getUserByUsername(currentUserData.username());
+
+        Predicate<UserModel.User> predicate = u ->
+                u.id().equals(userDetails.getId()) && u.username().equals(userDetails.getUsername());
 
         StepVerifier.create(setup)
                 .expectNextMatches(predicate)
