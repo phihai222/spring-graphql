@@ -3,6 +3,7 @@ package com.phihai91.springgraphql.securities;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.With;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -12,6 +13,7 @@ import java.util.Collection;
 @Getter
 @Setter
 @Builder
+@With
 public class AppUserDetails implements UserDetails {
     @Serial
     private static final long serialVersionUID = 1L;

@@ -54,6 +54,7 @@ public class UserServiceTest {
             .username("phihai91")
             .email("phihai91@gmail.com")
             .twoMFA(true)
+            .roles(List.of())
             .registrationDate(LocalDateTime.now())
             .userInfo(UserInfo.builder().build())
             .build();
@@ -68,6 +69,7 @@ public class UserServiceTest {
 
     @BeforeAll
     public static void init() {
+        // When
         mockStatic(ReactiveSecurityContextHolder.class);
         SecurityContext securityContext = mock(SecurityContext.class);
 
@@ -192,6 +194,45 @@ public class UserServiceTest {
         Predicate<UserModel.User> predicate = u -> u.username().equals(input.email()) &&
                 u.email().equals(input.email());
 
+
+        StepVerifier.create(setup)
+                .expectNextMatches(predicate)
+                .verifyComplete();
+    }
+
+    @Test
+    public void given_activeOTP_when_emailNotSet_returnError() {
+        // when
+        when(userRepository.findById(anyString()))
+                .thenReturn(Mono.just(currentUserData.withEmail(null)));
+
+        // then
+        var setup = userService.setTwoMFA();
+
+        StepVerifier.create(setup)
+                .expectError(ForbiddenException.class)
+                .verify();
+    }
+
+    @Test
+    public void give_activeOTP_when_emailValid_returnSuccess() {
+        // when
+        when(userRepository.findById(anyString()))
+                .thenReturn(Mono.just(currentUserData));
+
+        when(authService.getOtp())
+                .thenReturn("000000");
+
+        when(redisService.saveOtp(anyString(), anyString(), anyString()))
+                .thenReturn(Mono.just(true));
+
+        // then
+        var setup = userService.setTwoMFA();
+
+        Predicate<UserModel.SetTwoMFAPayload> predicate = res ->
+                res.otp().equals("000000") &&
+                        res.userId().equals(currentUserData.id())
+                        && res.sentTo().equals(currentUserData.email());
 
         StepVerifier.create(setup)
                 .expectNextMatches(predicate)
