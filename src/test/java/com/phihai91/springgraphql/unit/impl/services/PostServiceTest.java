@@ -21,6 +21,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.core.context.SecurityContext;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -104,6 +105,23 @@ public class PostServiceTest {
 
         Predicate<PostModel.CreatePostPayload> predicate = p ->
                 p.post().content().equals(input.content()) && p.post().userId().equals(currentUserData.id());
+
+        StepVerifier.create(setup)
+                .expectNextMatches(predicate)
+                .verifyComplete();
+    }
+
+    @Test
+    public void give_currentLoginUser_when_postExisted_then_return() {
+        // when
+        when(postRepository.findAllByUserIdEquals(anyString()))
+                .thenReturn(Flux.just(postData));
+
+        // then
+        var setup = postService.getPostsByUser();
+
+        Predicate<PostModel.CreatePostPayload> predicate = p ->
+                p.post().userId().equals(currentUserData.id());
 
         StepVerifier.create(setup)
                 .expectNextMatches(predicate)
