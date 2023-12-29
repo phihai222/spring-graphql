@@ -23,6 +23,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.core.context.SecurityContext;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -312,6 +313,43 @@ public class UserServiceTest {
 
         StepVerifier.create(setup)
                 .expectNextMatches(predicate)
+                .verifyComplete();
+    }
+
+    @Test
+    public void give_userIdList_then_emptyData_returnEmptyList() {
+        // give
+        List<String> ids = List.of("notFoundId");
+
+        // when
+        when(userRepository.findAllByIdInAndOrderById(any()))
+                .thenReturn(Flux.empty());
+
+        // then
+        var setup = userService.getAllUserByIds(ids);
+
+        StepVerifier.create(setup)
+                .verifyComplete();
+    }
+
+    @Test
+    public void give_userIdList_then_oneMatch_returnList() {
+        // give
+        List<String> ids = List.of(currentUserData.id());
+
+        // when
+        when(userRepository.findAllByIdInAndOrderById(any()))
+                .thenReturn(Flux.just(currentUserData));
+
+        // then
+        var setup = userService.getAllUserByIds(ids);
+
+        Predicate<UserModel.User> predicate = u ->
+                u.id().equals(currentUserData.id());
+
+        StepVerifier.create(setup)
+                .expectNextMatches(predicate)
+                .expectNextCount(0)
                 .verifyComplete();
     }
 }
