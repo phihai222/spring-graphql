@@ -12,15 +12,16 @@ import com.phihai91.springgraphql.services.impl.PostService;
 import com.phihai91.springgraphql.ultis.CursorUtils;
 import com.phihai91.springgraphql.ultis.UserHelper;
 import graphql.relay.Connection;
-import graphql.relay.ConnectionCursor;
 import graphql.relay.DefaultConnectionCursor;
 import graphql.relay.DefaultEdge;
 import org.bson.types.ObjectId;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -32,8 +33,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.function.Predicate;
@@ -84,18 +83,26 @@ public class PostServiceTest {
             .createdDate(LocalDateTime.now())
             .build();
 
+    private static MockedStatic<ReactiveSecurityContextHolder> reactiveSecurityMocked;
+    private static MockedStatic<UserHelper> userHelperMocked;
     @BeforeAll
     public static void init() {
         // When
-        mockStatic(ReactiveSecurityContextHolder.class);
+        reactiveSecurityMocked = mockStatic(ReactiveSecurityContextHolder.class);
         SecurityContext securityContext = mock(SecurityContext.class);
 
         when(ReactiveSecurityContextHolder.getContext())
                 .thenReturn(Mono.just(securityContext));
 
-        mockStatic(UserHelper.class);
+        userHelperMocked = mockStatic(UserHelper.class);
         when(UserHelper.getUserDetails(any()))
                 .thenReturn(userDetails);
+    }
+
+    @AfterAll
+    public static void close() {
+        reactiveSecurityMocked.close();
+        userHelperMocked.close();
     }
 
     @Test
@@ -165,7 +172,7 @@ public class PostServiceTest {
     }
 
     @Test
-    public void given_nullUserId_when_logged_then_ReturnData() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    public void given_nullUserId_when_logged_then_ReturnData() {
         // when
         when(postRepository.findAllByUserIdStart(anyString(),anyInt()))
                 .thenReturn(Flux.just(postData));

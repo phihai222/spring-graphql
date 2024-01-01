@@ -13,11 +13,13 @@ import com.phihai91.springgraphql.services.IAuthService;
 import com.phihai91.springgraphql.services.IRedisService;
 import com.phihai91.springgraphql.services.impl.UserService;
 import com.phihai91.springgraphql.ultis.UserHelper;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -70,18 +72,26 @@ public class UserServiceTest {
             .authorities(List.of(authority))
             .build();
 
+    private static MockedStatic<ReactiveSecurityContextHolder> reactiveSecurityMocked;
+    private static MockedStatic<UserHelper> userHelperMocked;
     @BeforeAll
     public static void init() {
         // When
-        mockStatic(ReactiveSecurityContextHolder.class);
+        reactiveSecurityMocked = mockStatic(ReactiveSecurityContextHolder.class);
         SecurityContext securityContext = mock(SecurityContext.class);
 
         when(ReactiveSecurityContextHolder.getContext())
                 .thenReturn(Mono.just(securityContext));
 
-        mockStatic(UserHelper.class);
+        userHelperMocked = mockStatic(UserHelper.class);
         when(UserHelper.getUserDetails(any()))
                 .thenReturn(userDetails);
+    }
+
+    @AfterAll
+    public static void close() {
+        reactiveSecurityMocked.close();
+        userHelperMocked.close();
     }
 
     @Test
