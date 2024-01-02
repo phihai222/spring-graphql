@@ -2,6 +2,7 @@ package com.phihai91.springgraphql.entities;
 
 import com.phihai91.springgraphql.payloads.PostModel;
 import lombok.Builder;
+import lombok.With;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -12,6 +13,7 @@ import java.util.List;
 
 @Document
 @Builder
+@With
 public record Post(
         @Id
         String id,

@@ -4,10 +4,12 @@ import com.phihai91.springgraphql.entities.Post;
 import com.phihai91.springgraphql.entities.User;
 import com.phihai91.springgraphql.entities.UserInfo;
 import com.phihai91.springgraphql.entities.Visibility;
+import com.phihai91.springgraphql.exceptions.NotFoundException;
 import com.phihai91.springgraphql.payloads.PostModel;
 import com.phihai91.springgraphql.repositories.IPostRepository;
 import com.phihai91.springgraphql.repositories.IUserRepository;
 import com.phihai91.springgraphql.securities.AppUserDetails;
+import com.phihai91.springgraphql.services.IFriendService;
 import com.phihai91.springgraphql.services.impl.PostService;
 import com.phihai91.springgraphql.ultis.CursorUtils;
 import com.phihai91.springgraphql.ultis.UserHelper;
@@ -55,6 +57,10 @@ public class PostServiceTest {
 
     @Mock
     private IUserRepository userRepository;
+
+    @Mock
+    private IFriendService friendService;
+
     private static final GrantedAuthority authority = new SimpleGrantedAuthority("ROLE_USER");
 
     private final User currentUserData = User.builder()
@@ -62,6 +68,16 @@ public class PostServiceTest {
             .username("phihai91")
             .email("phihai91@gmail.com")
             .twoMFA(true)
+            .roles(List.of())
+            .registrationDate(LocalDateTime.now())
+            .userInfo(UserInfo.builder().build())
+            .build();
+
+    private final User friendData = User.builder()
+            .id("507f1f77bcf86cd799439022")
+            .username("friendUsername")
+            .email("friendUsername@gmail.com")
+            .twoMFA(false)
             .roles(List.of())
             .registrationDate(LocalDateTime.now())
             .userInfo(UserInfo.builder().build())
@@ -78,6 +94,7 @@ public class PostServiceTest {
     private static final Post postData = Post.builder()
             .id(new ObjectId().toString())
             .userId("507f1f77bcf86cd799439011")
+            .visibility(Visibility.PUBLIC)
             .content("Content")
             .comments(List.of())
             .userInfo(UserInfo.builder().build())
@@ -88,6 +105,7 @@ public class PostServiceTest {
 
     private static MockedStatic<ReactiveSecurityContextHolder> reactiveSecurityMocked;
     private static MockedStatic<UserHelper> userHelperMocked;
+
     @BeforeAll
     public static void init() {
         // When
@@ -177,7 +195,7 @@ public class PostServiceTest {
     @Test
     public void given_nullUserId_when_logged_then_ReturnData() {
         // when
-        when(postRepository.findAllByUserIdStart(anyString(),anyInt()))
+        when(postRepository.findAllByUserIdStart(anyString(), anyInt()))
                 .thenReturn(Flux.just(postData));
 
         when(cursorUtils.from(anyString()))
@@ -222,6 +240,88 @@ public class PostServiceTest {
         Predicate<Connection<PostModel.Post>> predicate = c ->
                 c.getPageInfo().isHasNextPage() &&
                         c.getEdges().size() == 1;
+
+        StepVerifier.create(setup)
+                .expectNextMatches(predicate)
+                .verifyComplete();
+    }
+
+    @Test
+    public void given_friendId_when_isNotfound_then_ReturnError() {
+        // given
+        when(userRepository.findByUsernameEqualsOrEmailEquals(anyString(), anyString()))
+                .thenReturn(Mono.empty());
+
+        // when
+        var setup = postService.getPostsByUser(friendData.id(), 1, null);
+
+        StepVerifier.create(setup)
+                .expectError(NotFoundException.class)
+                .verify();
+    }
+
+    @Test
+    public void given_userId_when_isNotFriend_then_ReturnDataWithCursor() {
+        // when
+        when(userRepository.findByUsernameEqualsOrEmailEquals(anyString(), anyString()))
+                .thenReturn(Mono.just(friendData));
+
+        when(friendService.checkIsAlreadyFriend(anyString(), anyString()))
+                .thenReturn(Mono.just(false));
+
+        when(postRepository.findAllByUserIdStartWithVisibility(anyString(), anyList(), anyInt()))
+                .thenReturn(Flux.just(postData));
+
+        when(cursorUtils.from(anyString()))
+                .thenReturn(edge.getCursor());
+
+        when(cursorUtils.getFirstCursorFrom(any()))
+                .thenReturn(edge.getCursor());
+
+        when(cursorUtils.getLastCursorFrom(any()))
+                .thenReturn(edge.getCursor());
+
+        // then
+        var setup = postService.getPostsByUser(friendData.id(), 1, null);
+
+        Predicate<Connection<PostModel.Post>> predicate = c ->
+                c.getPageInfo().isHasNextPage() &&
+                        c.getEdges().size() == 1 &&
+                        c.getEdges().get(0).getNode().visibility().equals(Visibility.PUBLIC);
+
+        StepVerifier.create(setup)
+                .expectNextMatches(predicate)
+                .verifyComplete();
+    }
+
+    @Test
+    public void given_userId_when_isFriend_then_ReturnDataWithCursor() {
+        // when
+        when(userRepository.findByUsernameEqualsOrEmailEquals(anyString(), anyString()))
+                .thenReturn(Mono.just(friendData));
+
+        when(friendService.checkIsAlreadyFriend(anyString(), anyString()))
+                .thenReturn(Mono.just(true));
+
+        when(postRepository.findAllByUserIdStartWithVisibility(anyString(), anyList(), anyInt()))
+                .thenReturn(Flux.just(postData.withVisibility(Visibility.FRIEND_ONLY)));
+
+        when(cursorUtils.from(anyString()))
+                .thenReturn(edge.getCursor());
+
+        when(cursorUtils.getFirstCursorFrom(any()))
+                .thenReturn(edge.getCursor());
+
+        when(cursorUtils.getLastCursorFrom(any()))
+                .thenReturn(edge.getCursor());
+
+        // then
+        var setup = postService.getPostsByUser(friendData.id(), 1, null);
+
+        Predicate<Connection<PostModel.Post>> predicate = c ->
+                c.getPageInfo().isHasNextPage() &&
+                        c.getEdges().size() == 1 && c.getEdges().size() == 1 &&
+                        c.getEdges().get(0).getNode().visibility().equals(Visibility.FRIEND_ONLY);
 
         StepVerifier.create(setup)
                 .expectNextMatches(predicate)
