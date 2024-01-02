@@ -295,7 +295,7 @@ public class PostServiceTest {
     }
 
     @Test
-    public void given_userId_when_isFriend_then_ReturnDataWithCursor() {
+    public void given_userId_when_isFriend_then_ReturnDataStartWithCursor() {
         // when
         when(userRepository.findByUsernameEqualsOrEmailEquals(anyString(), anyString()))
                 .thenReturn(Mono.just(friendData));
@@ -326,5 +326,44 @@ public class PostServiceTest {
         StepVerifier.create(setup)
                 .expectNextMatches(predicate)
                 .verifyComplete();
+    }
+
+    @Test
+    public void given_userId_when_isFriend_then_ReturnDataBeforeWithCursor() {
+        // when
+        when(userRepository.findByUsernameEqualsOrEmailEquals(anyString(), anyString()))
+                .thenReturn(Mono.just(friendData));
+
+        when(friendService.checkIsAlreadyFriend(anyString(), anyString()))
+                .thenReturn(Mono.just(true));
+
+        when(postRepository.findAllByUserIdBeforeWithVisibility(anyString(), anyList(), anyString(), anyInt()))
+                .thenReturn(Flux.just(postData.withVisibility(Visibility.FRIEND_ONLY)));
+
+        when(cursorUtils.from(anyString()))
+                .thenReturn(edge.getCursor());
+
+        when(cursorUtils.getFirstCursorFrom(any()))
+                .thenReturn(edge.getCursor());
+
+        when(cursorUtils.getLastCursorFrom(any()))
+                .thenReturn(edge.getCursor());
+
+        // then
+        var setup = postService.getPostsByUser(friendData.id(), 1, postData.id());
+
+        Predicate<Connection<PostModel.Post>> predicate = c ->
+                c.getPageInfo().isHasNextPage() &&
+                        c.getEdges().size() == 1 && c.getEdges().size() == 1 &&
+                        c.getEdges().get(0).getNode().visibility().equals(Visibility.FRIEND_ONLY);
+
+        StepVerifier.create(setup)
+                .expectNextMatches(predicate)
+                .verifyComplete();
+    }
+
+    @Test
+    public void given_currentUser_then_friendListEmpty_return_postStart() {
+
     }
 }
