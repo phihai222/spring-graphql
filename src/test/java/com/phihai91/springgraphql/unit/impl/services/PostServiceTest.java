@@ -14,6 +14,7 @@ import com.phihai91.springgraphql.ultis.UserHelper;
 import graphql.relay.Connection;
 import graphql.relay.DefaultConnectionCursor;
 import graphql.relay.DefaultEdge;
+import graphql.relay.Edge;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -82,6 +83,8 @@ public class PostServiceTest {
             .userInfo(UserInfo.builder().build())
             .createdDate(LocalDateTime.now())
             .build();
+
+    private final Edge<Post> edge = new DefaultEdge<>(postData, new DefaultConnectionCursor(postData.id()));
 
     private static MockedStatic<ReactiveSecurityContextHolder> reactiveSecurityMocked;
     private static MockedStatic<UserHelper> userHelperMocked;
@@ -177,8 +180,6 @@ public class PostServiceTest {
         when(postRepository.findAllByUserIdStart(anyString(),anyInt()))
                 .thenReturn(Flux.just(postData));
 
-        var edge = new DefaultEdge<>(postData, new DefaultConnectionCursor(postData.id()));
-
         when(cursorUtils.from(anyString()))
                 .thenReturn(edge.getCursor());
 
@@ -190,6 +191,33 @@ public class PostServiceTest {
 
         // then
         var setup = postService.getPostsByUser(null, 1, null);
+
+        Predicate<Connection<PostModel.Post>> predicate = c ->
+                c.getPageInfo().isHasNextPage() &&
+                        c.getEdges().size() == 1;
+
+        StepVerifier.create(setup)
+                .expectNextMatches(predicate)
+                .verifyComplete();
+    }
+
+    @Test
+    public void given_nullUserId_when_logged_then_ReturnDataWithCursor() {
+        // when
+        when(postRepository.findAllByUserIdBefore(anyString(), anyString(), anyInt()))
+                .thenReturn(Flux.just(postData));
+
+        when(cursorUtils.from(anyString()))
+                .thenReturn(edge.getCursor());
+
+        when(cursorUtils.getFirstCursorFrom(any()))
+                .thenReturn(edge.getCursor());
+
+        when(cursorUtils.getLastCursorFrom(any()))
+                .thenReturn(edge.getCursor());
+
+        // then
+        var setup = postService.getPostsByUser(null, 1, postData.id());
 
         Predicate<Connection<PostModel.Post>> predicate = c ->
                 c.getPageInfo().isHasNextPage() &&
