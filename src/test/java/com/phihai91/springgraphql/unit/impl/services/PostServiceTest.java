@@ -1,9 +1,6 @@
 package com.phihai91.springgraphql.unit.impl.services;
 
-import com.phihai91.springgraphql.entities.Post;
-import com.phihai91.springgraphql.entities.User;
-import com.phihai91.springgraphql.entities.UserInfo;
-import com.phihai91.springgraphql.entities.Visibility;
+import com.phihai91.springgraphql.entities.*;
 import com.phihai91.springgraphql.exceptions.NotFoundException;
 import com.phihai91.springgraphql.payloads.PostModel;
 import com.phihai91.springgraphql.repositories.IPostRepository;
@@ -340,6 +337,7 @@ public class PostServiceTest {
         when(postRepository.findAllByUserIdBeforeWithVisibility(anyString(), anyList(), anyString(), anyInt()))
                 .thenReturn(Flux.just(postData.withVisibility(Visibility.FRIEND_ONLY)));
 
+        // mock cursor
         when(cursorUtils.from(anyString()))
                 .thenReturn(edge.getCursor());
 
@@ -363,7 +361,78 @@ public class PostServiceTest {
     }
 
     @Test
-    public void given_currentUser_then_friendListEmpty_return_postStart() {
+    public void given_currentUser_then_friendListEmpty_return_timelinePostStart() {
+        // given
+        Friend friendData = Friend.builder()
+                .id(currentUserData.id())
+                .friends(List.of())
+                .build();
 
+        // when
+        when(friendService.getFriendList(anyString()))
+                .thenReturn(Mono.just(friendData));
+
+        when(postRepository.findAllByUserIdsStartWithVisibility(any(), any(), anyInt()))
+                .thenReturn(Flux.just(postData.withVisibility(Visibility.PRIVATE)));
+
+        // mock cursor
+        when(cursorUtils.from(anyString()))
+                .thenReturn(edge.getCursor());
+
+        when(cursorUtils.getFirstCursorFrom(any()))
+                .thenReturn(edge.getCursor());
+
+        when(cursorUtils.getLastCursorFrom(any()))
+                .thenReturn(edge.getCursor());
+
+        // then
+        var setup = postService.getPostTimeline(1, null);
+
+        Predicate<Connection<PostModel.Post>> predicate = c ->
+                c.getPageInfo().isHasNextPage() &&
+                        c.getEdges().size() == 1 && c.getEdges().size() == 1 &&
+                        c.getEdges().get(0).getNode().visibility().equals(Visibility.PRIVATE);
+
+        StepVerifier.create(setup)
+                .expectNextMatches(predicate)
+                .verifyComplete();
+    }
+
+    @Test
+    public void given_currentUser_then_friendListEmpty_return_timelinePostBefor() {
+        // given
+        Friend friendData = Friend.builder()
+                .id(currentUserData.id())
+                .friends(List.of())
+                .build();
+
+        // when
+        when(friendService.getFriendList(anyString()))
+                .thenReturn(Mono.just(friendData));
+
+        when(postRepository.findAllByUserIdsBeforeWithVisibility(any(), any(), anyInt(), anyString()))
+                .thenReturn(Flux.just(postData.withVisibility(Visibility.PRIVATE)));
+
+        // mock cursor
+        when(cursorUtils.from(anyString()))
+                .thenReturn(edge.getCursor());
+
+        when(cursorUtils.getFirstCursorFrom(any()))
+                .thenReturn(edge.getCursor());
+
+        when(cursorUtils.getLastCursorFrom(any()))
+                .thenReturn(edge.getCursor());
+
+        // then
+        var setup = postService.getPostTimeline(1, postData.id());
+
+        Predicate<Connection<PostModel.Post>> predicate = c ->
+                c.getPageInfo().isHasNextPage() &&
+                        c.getEdges().size() == 1 && c.getEdges().size() == 1 &&
+                        c.getEdges().get(0).getNode().visibility().equals(Visibility.PRIVATE);
+
+        StepVerifier.create(setup)
+                .expectNextMatches(predicate)
+                .verifyComplete();
     }
 }
