@@ -1,7 +1,9 @@
 package com.phihai91.springgraphql.unit.impl.services;
 
 import com.phihai91.springgraphql.entities.*;
+import com.phihai91.springgraphql.exceptions.ForbiddenException;
 import com.phihai91.springgraphql.exceptions.NotFoundException;
+import com.phihai91.springgraphql.payloads.CommonModel;
 import com.phihai91.springgraphql.payloads.PostModel;
 import com.phihai91.springgraphql.repositories.IPostRepository;
 import com.phihai91.springgraphql.repositories.IUserRepository;
@@ -38,6 +40,7 @@ import java.util.List;
 import java.util.function.Predicate;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 
@@ -435,4 +438,58 @@ public class PostServiceTest {
                 .expectNextMatches(predicate)
                 .verifyComplete();
     }
+
+    @Test
+    public void given_postId_when_notFoundForDelete_returnError() {
+        // given
+        String input = new ObjectId().toString();
+
+        // when
+        when(postRepository.findById(anyString()))
+                .thenReturn(Mono.empty());
+
+        // then
+        var setup = postService.deletePost(input);
+
+        StepVerifier.create(setup)
+                .expectError(NotFoundException.class)
+                .verify();
+    }
+
+    @Test
+    public void given_postId_when_dontHavePermission_returnError() {
+        // given
+        String input = new ObjectId().toString();
+
+        // when
+        when(postRepository.findById(anyString()))
+                .thenReturn(Mono.just(postData.withUserId(input)));
+
+        // then
+        var setup = postService.deletePost(input);
+
+        StepVerifier.create(setup)
+                .expectError(ForbiddenException.class)
+                .verify();
+    }
+    @Test
+    public void given_postId_when_ok_returnSuccess() {
+        // when
+        when(postRepository.findById(anyString()))
+                .thenReturn(Mono.just(postData));
+
+        when(postRepository.deleteById(anyString()))
+                .thenReturn(Mono.empty());
+
+        // then
+        var setup = postService.deletePost(postData.id());
+
+        Predicate<CommonModel.CommonPayload> predicate = c ->
+                c.status().equals(CommonModel.CommonStatus.SUCCESS);
+
+        StepVerifier.create(setup)
+                .expectNextMatches(predicate)
+                .verifyComplete();
+    }
+
 }
