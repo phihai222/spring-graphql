@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 
 public class FriendModel {
     @Builder
+    @With
     public record AddFriendInput(
             String userId,
             String message
