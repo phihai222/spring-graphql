@@ -140,14 +140,14 @@ public class FriendService implements IFriendService {
 
         return currentFriendData.zipWith(targetFriendData, (current, target) -> {
                     // Add friend data to current User
-                    var currentFriendList = current.friends();
+                    var currentFriendList = new ArrayList<>(current.friends());
                     currentFriendList.add(FriendData.builder()
                             .id(new ObjectId().toString())
                             .userId(friendId)
                             .addedDate(LocalDateTime.now()).build());
 
                     //add friend data to target user
-                    var targetFriendList = target.friends();
+                    var targetFriendList = new ArrayList<>(target.friends());
                     targetFriendList.add(FriendData.builder()
                             .id(new ObjectId().toString())
                             .userId(userId)

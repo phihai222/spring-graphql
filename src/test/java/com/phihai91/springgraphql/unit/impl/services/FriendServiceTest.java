@@ -76,6 +76,7 @@ public class FriendServiceTest {
     private final Friend friendData = Friend.builder()
             .id(currentUserData.id())
             .friends(List.of(FriendData.builder()
+                    .id(new ObjectId().toString())
                     .userId(new ObjectId().toString())
                     .build()))
             .build();
@@ -211,6 +212,97 @@ public class FriendServiceTest {
         Predicate<CommonModel.CommonPayload> predicate = res ->
                 res.status().equals(CommonModel.CommonStatus.SUCCESS) &&
                         res.message().equals("Withdrew");
+
+        StepVerifier.create(setup)
+                .expectNextMatches(predicate)
+                .verifyComplete();
+    }
+
+    @Test
+    public void give_requestInput_when_createNewRequest_then_withdrawRequest() {
+        // given
+        FriendModel.AddFriendInput input = FriendModel.AddFriendInput.builder()
+                .userId(new ObjectId().toString())
+                .message("Fake message")
+                .build();
+
+        FriendRequest request = FriendRequest.builder()
+                .id(new ObjectId().toString())
+                .build();
+
+        // when
+        when(userRepository.findById(anyString()))
+                .thenReturn(Mono.just(currentUserData.withId(input.userId())));
+
+        when(friendRepository.findById(anyString()))
+                .thenReturn(Mono.just(friendData));
+
+        when(friendRequestRepository.findFirstByFromUserEqualsAndToUserEquals(currentUserData.id(), input.userId()))
+                .thenReturn(Mono.empty());
+
+        when(friendRequestRepository.findFirstByFromUserEqualsAndToUserEquals(input.userId(), currentUserData.id()))
+                .thenReturn(Mono.empty());
+
+        when(friendRequestRepository.save(any()))
+                .thenReturn(Mono.just(request));
+
+        // then
+        var setup = friendService.sendRequest(input);
+
+        Predicate<CommonModel.CommonPayload> predicate = res ->
+                res.status().equals(CommonModel.CommonStatus.SUCCESS) &&
+                        res.message().equals("Request send");
+
+        StepVerifier.create(setup)
+                .expectNextMatches(predicate)
+                .verifyComplete();
+    }
+
+    @Test
+    public void give_requestInput_when_requestFromFriendExisted_then_autoAccept() {
+        // given
+        FriendModel.AddFriendInput input = FriendModel.AddFriendInput.builder()
+                .userId(new ObjectId().toString())
+                .message("Fake message")
+                .build();
+
+        FriendRequest request = FriendRequest.builder()
+                .id(new ObjectId().toString())
+                .fromUser(input.userId())
+                .toUser(currentUserData.id())
+                .build();
+
+        // when
+        when(userRepository.findById(anyString()))
+                .thenReturn(Mono.just(currentUserData.withId(input.userId())));
+
+        when(friendRequestRepository.findFirstByFromUserEqualsAndToUserEquals(currentUserData.id(), input.userId()))
+                .thenReturn(Mono.empty());
+
+        when(friendRequestRepository.findFirstByFromUserEqualsAndToUserEquals(input.userId(), currentUserData.id()))
+                .thenReturn(Mono.just(request));
+
+        when(friendRepository.findById(currentUserData.id()))
+                .thenReturn(Mono.empty());
+
+        when(friendRepository.findById(input.userId()))
+                .thenReturn(Mono.empty());
+
+        when(friendRequestRepository.save(any()))
+                .thenReturn(Mono.just(FriendRequest.builder().build()));
+
+        when(friendRequestRepository.deleteById(anyString()))
+                .thenReturn(Mono.empty());
+
+        when(friendRepository.save(any()))
+                .thenReturn(Mono.just(friendData));
+
+        // then
+        var setup = friendService.sendRequest(input);
+
+        Predicate<CommonModel.CommonPayload> predicate = res ->
+                res.status().equals(CommonModel.CommonStatus.SUCCESS) &&
+                        res.message().equals("Accepted friend");
 
         StepVerifier.create(setup)
                 .expectNextMatches(predicate)
