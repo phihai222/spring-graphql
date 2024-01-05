@@ -181,6 +181,11 @@ public class FriendServiceTest {
                 .message("Fake message")
                 .build();
 
+        FriendRequest request = FriendRequest.builder()
+                .id(new ObjectId().toString())
+                .build();
+
+
         // when
         when(userRepository.findById(anyString()))
                 .thenReturn(Mono.just(currentUserData.withId(input.userId())));
@@ -188,9 +193,14 @@ public class FriendServiceTest {
         when(friendRepository.findById(anyString()))
                 .thenReturn(Mono.just(friendData));
 
-        // TODO MOCK Failed by something
-        when(friendRequestRepository.findFirstByFromUserEqualsAndToUserEquals(anyString(), anyString()))
-                .thenReturn(Mono.just(FriendRequest.builder().build()));
+        when(friendRequestRepository.findFirstByFromUserEqualsAndToUserEquals(currentUserData.id(), input.userId()))
+                .thenReturn(Mono.just(request));
+
+        when(friendRequestRepository.findFirstByFromUserEqualsAndToUserEquals(input.userId(), currentUserData.id()))
+                .thenReturn(Mono.just(request));
+
+        when(friendRequestRepository.save(any()))
+                .thenReturn(Mono.empty());
 
         when(friendRequestRepository.deleteById(anyString()))
                 .thenReturn(Mono.empty());
@@ -199,7 +209,8 @@ public class FriendServiceTest {
         var setup = friendService.sendRequest(input);
 
         Predicate<CommonModel.CommonPayload> predicate = res ->
-                res.status().equals(CommonModel.CommonStatus.SUCCESS);
+                res.status().equals(CommonModel.CommonStatus.SUCCESS) &&
+                        res.message().equals("Withdrew");
 
         StepVerifier.create(setup)
                 .expectNextMatches(predicate)
