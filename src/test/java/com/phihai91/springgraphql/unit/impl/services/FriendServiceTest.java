@@ -308,4 +308,42 @@ public class FriendServiceTest {
                 .expectNextMatches(predicate)
                 .verifyComplete();
     }
+
+    @Test
+    public void given_userId_when_friendRequestNotExisted_then_returnError() {
+        // when
+        when(friendRequestRepository.findFirstByFromUserEqualsAndToUserEquals(anyString(), anyString()))
+                .thenReturn(Mono.empty());
+
+        // then
+        var setup = friendService.ignoreFriendRequest(new ObjectId().toString());
+
+        StepVerifier.create(setup)
+                .expectError(NotFoundException.class)
+                .verify();
+    }
+
+    @Test
+    public void given_userId_when_friendRequestExisted_then_updateData() {
+        // when
+        when(friendRequestRepository.findFirstByFromUserEqualsAndToUserEquals(anyString(), anyString()))
+                .thenReturn(Mono.just(FriendRequest.builder()
+                        .isIgnore(false)
+                        .build()));
+
+        when(friendRequestRepository.save(any()))
+                .thenReturn(Mono.just(FriendRequest.builder()
+                        .isIgnore(true)
+                        .build()));
+
+        // then
+        var setup = friendService.ignoreFriendRequest(new ObjectId().toString());
+
+        Predicate<CommonModel.CommonPayload> predicate = c ->
+                c.status().equals(CommonModel.CommonStatus.SUCCESS);
+
+        StepVerifier.create(setup)
+                .expectNextMatches(predicate)
+                .verifyComplete();
+    }
 }
