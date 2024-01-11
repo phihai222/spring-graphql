@@ -470,4 +470,70 @@ public class FriendServiceTest {
                 .expectNextMatches(predicate)
                 .verifyComplete();
     }
+
+    @Test
+    public void given_userIdToUnfriend_when_userNotFound_returnError() {
+        // when
+        when(userRepository.findById(anyString()))
+                .thenReturn(Mono.empty());
+
+        when(friendRepository.findById(anyString()))
+                .thenReturn(Mono.empty());
+
+        // then
+        var setup = friendService.unfriend(new ObjectId().toString());
+
+        StepVerifier.create(setup)
+                .expectError(NotFoundException.class)
+                .verify();
+    }
+
+    @Test
+    public void given_userIdToUnfriend_when_userIsNotFriend_returnError() {
+        // when
+        when(userRepository.findById(anyString()))
+                .thenReturn(Mono.just(currentUserData.withId(new ObjectId().toString())));
+
+        when(friendRepository.findById(anyString()))
+                .thenReturn(Mono.just(friendData));
+
+        // then
+        var setup = friendService.unfriend(new ObjectId().toString());
+
+        StepVerifier.create(setup)
+                .expectError(NotFoundException.class)
+                .verify();
+    }
+
+    @Test
+    public void given_userIdToUnfriend_when_userAlreadyFriend_then_returnSuccess() {
+        // given
+        User friendUser = currentUserData.withId(new ObjectId().toString());
+
+        Friend currentFriendData = friendData.withFriends(List.of(
+                FriendData.builder()
+                        .userId(friendUser.id())
+                        .build()
+        ));
+        // when
+        when(userRepository.findById(anyString()))
+                .thenReturn(Mono.just(friendUser));
+
+        when(friendRepository.findById(anyString()))
+                .thenReturn(Mono.just(currentFriendData));
+
+        when(friendRepository.save(any()))
+                .thenReturn(Mono.empty());
+
+        // then
+        var setup = friendService.unfriend(friendUser.id());
+
+        Predicate<CommonModel.CommonPayload> predicate = c ->
+                c.status().equals(CommonModel.CommonStatus.SUCCESS) &&
+                        c.message().equals("Unfriend successfully");
+
+        StepVerifier.create(setup)
+                .expectNextMatches(predicate)
+                .verifyComplete();
+    }
 }
