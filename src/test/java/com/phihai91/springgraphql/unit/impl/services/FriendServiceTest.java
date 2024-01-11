@@ -84,6 +84,10 @@ public class FriendServiceTest {
                     .id(new ObjectId().toString())
                     .userId(new ObjectId().toString())
                     .build()))
+            .friend(FriendData.builder()
+                    .id(new ObjectId().toString())
+                    .userId(new ObjectId().toString())
+                    .build())
             .build();
 
     private final FriendRequest friendRequest = FriendRequest.builder()
@@ -381,7 +385,86 @@ public class FriendServiceTest {
 
         Predicate<Connection<FriendModel.FriendRequest>> predicate = fr ->
                 fr.getEdges().get(0).getNode().toUser().equals(currentUserData.id())
-                && fr.getEdges().size() == 1;
+                        && fr.getEdges().size() == 1;
+
+        StepVerifier.create(setup)
+                .expectNextMatches(predicate)
+                .verifyComplete();
+    }
+
+    @Test
+    public void given_limit_when_haveOneRequestWithCursor_then_returnPage() {
+        // when
+        when(friendRequestRepository.findAllByUserIdBefore(anyString(), anyString(), anyInt()))
+                .thenReturn(Flux.just(friendRequest));
+
+        when(cursorUtils.from(anyString()))
+                .thenReturn(edge.getCursor());
+
+        when(cursorUtils.getFirstCursorFrom(any()))
+                .thenReturn(edge.getCursor());
+
+        when(cursorUtils.getLastCursorFrom(any()))
+                .thenReturn(edge.getCursor());
+
+        // then
+        var setup = friendService.getFriendRequest(1, new ObjectId().toString());
+
+        Predicate<Connection<FriendModel.FriendRequest>> predicate = fr ->
+                fr.getEdges().get(0).getNode().toUser().equals(currentUserData.id())
+                        && fr.getEdges().size() == 1;
+
+        StepVerifier.create(setup)
+                .expectNextMatches(predicate)
+                .verifyComplete();
+    }
+
+    @Test
+    public void given_currentUser_whenHaveOneFriend_returnFriendList() {
+        // when
+        when(cursorUtils.from(anyString()))
+                .thenReturn(edge.getCursor());
+
+        when(cursorUtils.getFirstCursorFrom(any()))
+                .thenReturn(edge.getCursor());
+
+        when(cursorUtils.getLastCursorFrom(any()))
+                .thenReturn(edge.getCursor());
+
+        when(friendRepository.findAllByUserIdStart(anyString(), anyInt()))
+                .thenReturn(Flux.just(friendData));
+
+        // then
+        var setup = friendService.getFriendList(1, null);
+
+        Predicate<Connection<FriendModel.Friend>> predicate = f ->
+                f.getEdges().size() == 1;
+
+        StepVerifier.create(setup)
+                .expectNextMatches(predicate)
+                .verifyComplete();
+    }
+
+    @Test
+    public void given_currentUser_whenHaveOneFriendWithCursor_returnFriendList() {
+        // when
+        when(cursorUtils.from(anyString()))
+                .thenReturn(edge.getCursor());
+
+        when(cursorUtils.getFirstCursorFrom(any()))
+                .thenReturn(edge.getCursor());
+
+        when(cursorUtils.getLastCursorFrom(any()))
+                .thenReturn(edge.getCursor());
+
+        when(friendRepository.findAllByUserIdBefore(anyString(), anyString(), anyInt()))
+                .thenReturn(Flux.just(friendData));
+
+        // then
+        var setup = friendService.getFriendList(1, new ObjectId().toString());
+
+        Predicate<Connection<FriendModel.Friend>> predicate = f ->
+                f.getEdges().size() == 1;
 
         StepVerifier.create(setup)
                 .expectNextMatches(predicate)
