@@ -536,4 +536,20 @@ public class FriendServiceTest {
                 .expectNextMatches(predicate)
                 .verifyComplete();
     }
+
+    @Test
+    public void given_userId_when_haveOneFriend_returnFriendList() {
+        // when
+        when(friendRepository.findById(anyString()))
+                .thenReturn(Mono.just(friendData));
+
+        // then
+        var setup = friendService.getFriendList(new ObjectId().toString());
+
+        Predicate<Friend> predicate = f -> f.friends().size() == 1;
+
+        StepVerifier.create(setup)
+                .expectNextMatches(predicate)
+                .verifyComplete();
+    }
 }
