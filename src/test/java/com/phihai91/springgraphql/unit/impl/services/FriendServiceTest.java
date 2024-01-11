@@ -12,6 +12,10 @@ import com.phihai91.springgraphql.securities.AppUserDetails;
 import com.phihai91.springgraphql.services.impl.FriendService;
 import com.phihai91.springgraphql.ultis.CursorUtils;
 import com.phihai91.springgraphql.ultis.UserHelper;
+import graphql.relay.Connection;
+import graphql.relay.DefaultConnectionCursor;
+import graphql.relay.DefaultEdge;
+import graphql.relay.Edge;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -25,6 +29,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.core.context.SecurityContext;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -81,6 +86,15 @@ public class FriendServiceTest {
                     .build()))
             .build();
 
+    private final FriendRequest friendRequest = FriendRequest.builder()
+            .id(new ObjectId().toString())
+            .isIgnore(false)
+            .message("I want to add you")
+            .fromUser(new ObjectId().toString())
+            .toUser(currentUserData.id())
+            .build();
+
+    private final Edge<FriendRequest> edge = new DefaultEdge<>(friendRequest, new DefaultConnectionCursor(friendRequest.id()));
     private static MockedStatic<ReactiveSecurityContextHolder> reactiveSecurityMocked;
     private static MockedStatic<UserHelper> userHelperMocked;
 
@@ -341,6 +355,33 @@ public class FriendServiceTest {
 
         Predicate<CommonModel.CommonPayload> predicate = c ->
                 c.status().equals(CommonModel.CommonStatus.SUCCESS);
+
+        StepVerifier.create(setup)
+                .expectNextMatches(predicate)
+                .verifyComplete();
+    }
+
+    @Test
+    public void given_limit_when_haveOneRequest_then_returnPage() {
+        // when
+        when(friendRequestRepository.findAllByUserIdStart(anyString(), anyInt()))
+                .thenReturn(Flux.just(friendRequest));
+
+        when(cursorUtils.from(anyString()))
+                .thenReturn(edge.getCursor());
+
+        when(cursorUtils.getFirstCursorFrom(any()))
+                .thenReturn(edge.getCursor());
+
+        when(cursorUtils.getLastCursorFrom(any()))
+                .thenReturn(edge.getCursor());
+
+        // then
+        var setup = friendService.getFriendRequest(1, null);
+
+        Predicate<Connection<FriendModel.FriendRequest>> predicate = fr ->
+                fr.getEdges().get(0).getNode().toUser().equals(currentUserData.id())
+                && fr.getEdges().size() == 1;
 
         StepVerifier.create(setup)
                 .expectNextMatches(predicate)
