@@ -9,6 +9,7 @@ import com.phihai91.springgraphql.securities.AppUserDetails;
 import com.phihai91.springgraphql.services.impl.CommentService;
 import com.phihai91.springgraphql.ultis.CursorUtils;
 import com.phihai91.springgraphql.ultis.UserHelper;
+import graphql.relay.Connection;
 import graphql.relay.DefaultConnectionCursor;
 import graphql.relay.DefaultEdge;
 import graphql.relay.Edge;
@@ -25,6 +26,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.core.context.SecurityContext;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -145,5 +147,82 @@ public class CommentServiceTest {
                 .verifyComplete();
     }
 
+    @Test
+    public void given_postId_when_notFound_then_returnError() {
+        // when
+        when(postRepository.findById(anyString()))
+                .thenReturn(Mono.empty());
 
+        when(commentRepository.findAllByPostIdStart(anyString(), anyInt()))
+                .thenReturn(Flux.empty());
+
+        // then
+        var setup = commentService.getCommentByPostId(new ObjectId().toString(), 1 , null);
+
+        StepVerifier.create(setup)
+                .expectError(NotFoundException.class)
+                .verify();
+    }
+
+    @Test
+    public void given_postId_when_commentExisted_then_returnComment() {
+        // when
+        when(postRepository.findById(anyString()))
+                .thenReturn(Mono.just(Post.builder()
+                        .id(comment.postId())
+                        .build()));
+
+        when(commentRepository.findAllByPostIdStart(anyString(), anyInt()))
+                .thenReturn(Flux.just(comment));
+
+        when(cursorUtils.from(anyString()))
+                .thenReturn(edge.getCursor());
+
+        when(cursorUtils.getFirstCursorFrom(any()))
+                .thenReturn(edge.getCursor());
+
+        when(cursorUtils.getLastCursorFrom(any()))
+                .thenReturn(edge.getCursor());
+
+        // then
+        var setup = commentService.getCommentByPostId(comment.postId(), 1 , null);
+
+        Predicate<Connection<CommentModel.Comment>> predicate = c ->
+                c.getEdges().size() == 1;
+
+        StepVerifier.create(setup)
+                .expectNextMatches(predicate)
+                .verifyComplete();
+    }
+
+    @Test
+    public void given_postId_when_commentExistedBefore_then_returnComment() {
+        // when
+        when(postRepository.findById(anyString()))
+                .thenReturn(Mono.just(Post.builder()
+                        .id(comment.postId())
+                        .build()));
+
+        when(commentRepository.findAllByPostIdBefore(anyString(), anyString(), anyInt()))
+                .thenReturn(Flux.just(comment));
+
+        when(cursorUtils.from(anyString()))
+                .thenReturn(edge.getCursor());
+
+        when(cursorUtils.getFirstCursorFrom(any()))
+                .thenReturn(edge.getCursor());
+
+        when(cursorUtils.getLastCursorFrom(any()))
+                .thenReturn(edge.getCursor());
+
+        // then
+        var setup = commentService.getCommentByPostId(comment.postId(), 1 , comment.id());
+
+        Predicate<Connection<CommentModel.Comment>> predicate = c ->
+                c.getEdges().size() == 1;
+
+        StepVerifier.create(setup)
+                .expectNextMatches(predicate)
+                .verifyComplete();
+    }
 }
