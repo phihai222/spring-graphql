@@ -47,7 +47,7 @@ public class FileController {
         return ResponseEntity.ok().body(result);
     }
 
-    @DeleteMapping("/files/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Mono<CommonModel.CommonPayload>> deleteFile(@PathVariable String id) {
         var result = storageService.delete(id)
                 .map(aBoolean -> CommonModel.CommonPayload.builder()

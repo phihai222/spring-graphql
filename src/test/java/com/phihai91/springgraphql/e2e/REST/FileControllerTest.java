@@ -38,6 +38,7 @@ public class FileControllerTest {
     private IFileRepository fileRepository;
 
     private String accessToken;
+    private String anotherToken;
 
     @Value("classpath:images/invalid_size.png")
     private Resource inValidResource;
@@ -55,7 +56,13 @@ public class FileControllerTest {
                 .roles(List.of(Role.ROLE_USER))
                 .build();
 
+        User other = User.builder()
+                .id("654a1f2f84d82218bd7d5eb9")
+                .roles(List.of(Role.ROLE_USER))
+                .build();
+
         accessToken = jwtTokenProvider.createToken(user).accessToken();
+        anotherToken = jwtTokenProvider.createToken(other).accessToken();
     }
 
     @AfterAll
@@ -124,5 +131,62 @@ public class FileControllerTest {
                 .headers(httpHeaders -> httpHeaders.setBearerAuth(accessToken))
                 .exchange()
                 .expectStatus().isOk();
+    }
+
+    @Test
+    public void given_fileIdForDelete_whenNotFound_returnError() {
+        webClient.delete()
+                .uri("/api/v1/files/invalid-id")
+                .headers(httpHeaders -> httpHeaders.setBearerAuth(accessToken))
+                .exchange()
+                .expectStatus().isNotFound();
+    }
+
+    @Test
+    public void given_fileIdForDelete_found_returnSuccess() {
+        MultipartBodyBuilder builder = new MultipartBodyBuilder();
+        builder.part("file", validResource);
+
+        var res = webClient.post()
+                .uri("/api/v1/files/upload-single")
+                .headers(httpHeaders -> httpHeaders.setBearerAuth(accessToken))
+                .contentType(MediaType.MULTIPART_FORM_DATA)
+                .body(BodyInserters.fromMultipartData(builder.build()))
+                .exchange()
+                .expectStatus().isOk()
+                .returnResult(File.class);
+
+        File file = res.getResponseBody().blockFirst();
+        assert file != null;
+
+        webClient.delete()
+                .uri("/api/v1/files/" + file.id())
+                .headers(httpHeaders -> httpHeaders.setBearerAuth(accessToken))
+                .exchange()
+                .expectStatus().isOk();
+    }
+
+    @Test
+    public void given_fileIdForDelete_dontHavePermission_returnError() {
+        MultipartBodyBuilder builder = new MultipartBodyBuilder();
+        builder.part("file", validResource);
+
+        var res = webClient.post()
+                .uri("/api/v1/files/upload-single")
+                .headers(httpHeaders -> httpHeaders.setBearerAuth(accessToken))
+                .contentType(MediaType.MULTIPART_FORM_DATA)
+                .body(BodyInserters.fromMultipartData(builder.build()))
+                .exchange()
+                .expectStatus().isOk()
+                .returnResult(File.class);
+
+        File file = res.getResponseBody().blockFirst();
+        assert file != null;
+
+        webClient.delete()
+                .uri("/api/v1/files/" + file.id())
+                .headers(httpHeaders -> httpHeaders.setBearerAuth(anotherToken))
+                .exchange()
+                .expectStatus().isForbidden();
     }
 }
