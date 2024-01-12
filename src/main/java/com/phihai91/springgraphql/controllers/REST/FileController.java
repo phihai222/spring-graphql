@@ -34,8 +34,7 @@ public class FileController {
                 .map(ResponseEntity::ok);
     }
 
-    //TODO /upload-multi API
-    @GetMapping(value = "/files/{id}", produces = MediaType.IMAGE_JPEG_VALUE)
+    @GetMapping(value = "/{id}", produces = MediaType.IMAGE_JPEG_VALUE)
     public ResponseEntity<Mono<byte[]>> getFile(@PathVariable String id) {
         Flux<DataBuffer> file = storageService.load(id);
         var result = DataBufferUtils.join(file)

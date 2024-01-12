@@ -1,8 +1,11 @@
 package com.phihai91.springgraphql.e2e.REST;
 
+import com.phihai91.springgraphql.entities.File;
 import com.phihai91.springgraphql.entities.Role;
 import com.phihai91.springgraphql.entities.User;
+import com.phihai91.springgraphql.repositories.IFileRepository;
 import com.phihai91.springgraphql.securities.JwtTokenProvider;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -15,6 +18,7 @@ import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.BodyInserters;
+import org.apache.commons.io.FileUtils;
 
 import java.io.IOException;
 import java.util.List;
@@ -30,13 +34,19 @@ public class FileControllerTest {
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
 
+    @Autowired
+    private IFileRepository fileRepository;
+
     private String accessToken;
 
-    @Value("classpath:public/invalid_size.png")
+    @Value("classpath:images/invalid_size.png")
     private Resource inValidResource;
 
-    @Value("classpath:public/valid.jpg")
+    @Value("classpath:images/valid.jpg")
     private Resource validResource;
+
+    @Value("${fileSrc}")
+    private String fileSrc;
 
     @BeforeEach
     public void beforeEach() {
@@ -46,6 +56,12 @@ public class FileControllerTest {
                 .build();
 
         accessToken = jwtTokenProvider.createToken(user).accessToken();
+    }
+
+    @AfterAll
+    public void finish() throws IOException {
+        fileRepository.deleteAll().block();
+        FileUtils.cleanDirectory(new java.io.File(fileSrc));
     }
 
     @Test
@@ -73,6 +89,39 @@ public class FileControllerTest {
                 .headers(httpHeaders -> httpHeaders.setBearerAuth(accessToken))
                 .contentType(MediaType.MULTIPART_FORM_DATA)
                 .body(BodyInserters.fromMultipartData(builder.build()))
+                .exchange()
+                .expectStatus().isOk();
+    }
+
+    @Test
+    public void given_fileId_when_fileNotFound_returnError() {
+        webClient.get()
+                .uri("/api/v1/files/invalid_id")
+                .headers(httpHeaders -> httpHeaders.setBearerAuth(accessToken))
+                .exchange()
+                .expectStatus().isBadRequest();
+    }
+
+    @Test
+    public void given_fileId_when_found_returnFile() {
+        MultipartBodyBuilder builder = new MultipartBodyBuilder();
+        builder.part("file", validResource);
+
+        var res = webClient.post()
+                .uri("/api/v1/files/upload-single")
+                .headers(httpHeaders -> httpHeaders.setBearerAuth(accessToken))
+                .contentType(MediaType.MULTIPART_FORM_DATA)
+                .body(BodyInserters.fromMultipartData(builder.build()))
+                .exchange()
+                .expectStatus().isOk()
+                .returnResult(File.class);
+
+        File file = res.getResponseBody().blockFirst();
+        assert file != null;
+
+        webClient.get()
+                .uri("/api/v1/files/" + file.id())
+                .headers(httpHeaders -> httpHeaders.setBearerAuth(accessToken))
                 .exchange()
                 .expectStatus().isOk();
     }
